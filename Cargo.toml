@@ -81,7 +81,6 @@ significant_drop_tightening = "warn"
 single_match_else = "warn"
 #stable_sort_primitive = "allow" # add to math crates
 unused_trait_names = "warn"
-used_underscore_binding = "warn"
 used_underscore_items = "warn"
 #needless_pass_by_value = "warn"
 must_use_candidate = "warn"
