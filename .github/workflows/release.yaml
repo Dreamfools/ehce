@@ -16,28 +16,14 @@ on:
         description: "Build for Linux"
         default: true
         type: boolean
-      build_for_web:
-        description: "Build for web"
-        default: true
-        type: boolean
       upload_to_github:
         description: "Upload to GitHub releases"
-        default: true
-        type: boolean
-      deploy_to_itch:
-        description: "Deploy to itch.io (if configured)"
-        default: false
-        type: boolean
-      deploy_to_github_pages:
-        description: "Deploy web build to GitHub Pages"
         default: true
         type: boolean
       deny_warnings:
         description: "Deny warnings"
         default: false
         type: boolean
-  push:
-    branches: [main]
 
 # Cancel the release workflow when a more recent workflow begins.
 concurrency:
@@ -50,11 +36,7 @@ env:
   cargo_build_binary_name: ehce
 
   # The path to the assets directory.
-  assets_path: assets
-
-  # The itch.io project to deploy to in the format `user-name/project-name`.
-  # There will be no deployment to itch.io if this is commented out.
-  itch_page: juh9870/ehce
+  assets_path: game/mods
 
   # The base filename of the binary in the package produced by this workflow.
   # Applies to Windows, macOS, and Linux releases.
@@ -69,26 +51,7 @@ env:
   # <https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-storage-and-bandwidth-usage>
   git_lfs: false
 
-  # Enable these to deploy on every push to `main`.
-  # Make sure to set up any enabled targets. Builds will ignore warnings.
-  # Warning: If you use private repositories, this will eat through your available worker minutes quickly.
-  continuous_deployment_to_itch: false
-  continuous_deployment_to_github_pages: false
-
 jobs:
-  # Forward some environment variables as outputs of this job.
-  # This is needed because the `env` context can't be used in the `if:` condition of a job:
-  # <https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability>
-  forward-env:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Do nothing
-        run: "true"
-    outputs:
-      itch_page: ${{ env.itch_page }}
-      continuous_deployment_to_itch: ${{ env.continuous_deployment_to_itch }}
-      continuous_deployment_to_github_pages: ${{ env.continuous_deployment_to_github_pages }}
-
   # Determine the version number for this workflow.
   get-version:
     runs-on: ubuntu-latest
@@ -109,7 +72,6 @@ jobs:
   # Build and package a release for each platform.
   build:
     needs:
-      - forward-env
       - get-version
     env:
       version: ${{ needs.get-version.outputs.version }}
@@ -118,11 +80,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - platform: web
-            targets: wasm32-unknown-unknown
-            package_ext: .zip
-            runner: ubuntu-latest
-
           - platform: linux
             targets: x86_64-unknown-linux-gnu
             package_ext: .zip
@@ -166,7 +123,6 @@ jobs:
 
           # Check if building for this platform is enabled.
           echo 'is_platform_enabled=${{
-            (matrix.platform == 'web' && (inputs.build_for_web || (github.event_name == 'push' && (env.continuous_deployment_to_itch == 'true' || env.continuous_deployment_to_github_pages == 'true')))) ||
             (matrix.platform == 'linux' && inputs.build_for_linux) ||
             (matrix.platform == 'windows' && inputs.build_for_windows)
           }}' >> "${GITHUB_ENV}"
@@ -206,16 +162,8 @@ jobs:
         if: ${{ env.is_platform_enabled == 'true' }}
         run: cargo binstall --version 0.1.0-alpha.2 --locked --no-confirm --force --git='https://github.com/TheBevyFlock/bevy_cli' bevy_cli
 
-      - name: Build and add web bundle to app (Web)
-        if: ${{ env.is_platform_enabled == 'true' && matrix.platform == 'web' }}
-        run: |
-          cargo binstall --locked --no-confirm --force wasm-bindgen-cli
-          cargo binstall --locked --no-confirm --force wasm-opt
-          bevy build --locked --release --features='${{ matrix.features }}' --yes web --bundle
-          mv 'target/bevy_web/web-release/${{ env.cargo_build_binary_name }}' '${{ env.app }}'
-
-      - name: Build and add binaries to app (non-Web)
-        if: ${{ env.is_platform_enabled == 'true' && matrix.platform != 'web' }}
+      - name: Build and add binaries to app
+        if: ${{ env.is_platform_enabled == 'true' }}
         run: |
           for target in ${{ matrix.targets }}; do
             bevy build --locked --release --target="${target}" --features='${{ matrix.features }}'
@@ -223,8 +171,8 @@ jobs:
           done
           mv tmp/binary/*'${{ matrix.binary_ext }}' '${{ env.app }}/${{ env.app_binary_name }}${{ matrix.binary_ext }}'
 
-      - name: Add assets to app (non-Web)
-        if: ${{ env.is_platform_enabled == 'true' && matrix.platform != 'web' }}
+      - name: Add assets to app
+        if: ${{ env.is_platform_enabled == 'true' }}
         run: cp -R ./'${{ env.assets_path }}' '${{ env.app }}' || true # Ignore error if assets folder does not exist.
 
       - name: Package app (non-Windows)
@@ -247,12 +195,6 @@ jobs:
           name: package-${{ matrix.platform }}
           retention-days: 1
 
-      - name: Upload web bundle to workflow artifacts for GitHub Pages (Web)
-        if: ${{ env.is_platform_enabled == 'true' && matrix.platform == 'web' && (inputs.deploy_to_github_pages || (github.event_name == 'push' && needs.forward-env.outputs.continuous_deployment_to_github_pages == 'true')) }}
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ${{ env.app }}/${{ env.cargo_build_binary_name }}
-
       - name: Upload package to GitHub release
         if: ${{ env.is_platform_enabled == 'true' && inputs.upload_to_github }}
         uses: svenstaro/upload-release-action@v2
@@ -263,55 +205,3 @@ jobs:
           release_name: ${{ env.version }}
           tag: ${{ env.version }}
           overwrite: true
-
-  # Deploy to itch.io.
-  deploy-to-itch:
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ (inputs.deploy_to_itch || (github.event_name == 'push' && needs.forward-env.outputs.continuous_deployment_to_itch == 'true')) && needs.forward-env.outputs.itch_page != '' }}
-
-    steps:
-      - name: Download packages
-        uses: actions/download-artifact@v4
-        with:
-          pattern: package-*
-          path: tmp
-
-      - name: Install butler
-        run: |
-          curl -L -o butler.zip 'https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default'
-          unzip butler.zip
-          chmod +x butler
-          ./butler -V
-
-      - name: Upload packages to itch.io
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
-        run: |
-          for package in $(ls tmp); do
-            ./butler push \
-              --fix-permissions \
-              --userversion='${{ needs.get-version.outputs.version }}' \
-              tmp/"${package}"/* \
-              '${{ env.itch_page }}':"${package#package-}"
-          done
-
-  # Deploy to GitHub Pages.
-  deploy-to-github-pages:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      # Required to deploy to GitHub Pages.
-      pages: write
-      # Required for GitHub Pages to verify the source of the deployment.
-      # See: <https://github.com/actions/deploy-pages/issues/329>.
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    if: ${{ (inputs.deploy_to_github_pages && inputs.build_for_web) || (github.event_name == 'push' && needs.forward-env.outputs.continuous_deployment_to_github_pages == 'true') }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
