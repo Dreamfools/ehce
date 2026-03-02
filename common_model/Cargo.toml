@@ -1,0 +1,21 @@
+[package]
+name = "common_model"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+schemars = { workspace = true }
+serde = { workspace = true }
+utils = { workspace = true }
+weighted_rand = { workspace = true }
+num-traits = { workspace = true }
+thiserror = { workspace = true }
+rand = { workspace = true }
+glam = { workspace = true }
+float-ord = { workspace = true }
+bevy_reflect = { workspace = true }
+bevy_color = { workspace = true, features = ["bevy_reflect", "serialize"] }
+registry = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,15 @@
+{
+  "Spaceship": {
+    "id": "scout",
+    "sprite": "scout.png",
+    "model_size": 1,
+    "controller": {
+      "acceleration_force": 12,
+      "deceleration_force": 6,
+      "braking_force": 1,
+      "turn_torgue": 6,
+      "max_speed": 12,
+      "max_angular_speed": 6,
+    }
+  }
+}

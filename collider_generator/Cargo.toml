@@ -1,0 +1,15 @@
+[package]
+name = "collider_generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { workspace = true, default-features = false }
+avian2d = { workspace = true }
+contour = { workspace = true, features = ["f32"] }
+geo = { workspace = true, default-features = false }
+miette = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

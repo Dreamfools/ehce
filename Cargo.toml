@@ -1,0 +1,135 @@
+[workspace]
+resolver = "2"
+members = ["game", "utils", "common_model", "collider_generator", "registry", "model"]
+
+[workspace.dependencies]
+ahash = { version = "0.8", default-features = false }
+avian2d = "0.5"
+bevy = { version = "0.18", default-features = false }
+bevy_asset = { version = "0.18.0", default-features = false }
+bevy_color = "0.18.0"
+bevy_image = { version = "0.18.0", default-features = false }
+bevy_reflect = "0.18.0"
+contour = "0.13.1"
+csscolorparser = "0.8"
+dashmap = "6"
+float-ord = "0.3"
+foldhash = "0.2.0"
+fs-err = "3.2.2"
+geo = { version = "0.31.0", default-features = false }
+glam = "0.30"
+inline_tweak = "1.2.4"
+itertools = "0.14.0"
+miette = "7.6.0"
+num-traits = "0.2.19"
+ordermap = "1.1"
+rand = "0.9"
+rootcause = "0.12.1"
+schemars = "1.2"
+serde = "1.0.228"
+serde_json = "1.0.149"
+serde_json5 = "0.2.1"
+thiserror = "2.0.18"
+tracing = { version = "0.1.44", features = ["release_max_level_info"] }
+typenum = "1.19.0"
+ustr = "1.1.0"
+wayland-sys = { version = "0.31.8" }
+weighted_rand = { git = "https://github.com/bionicles/weighted_rand.git", rev = "7997c56cc1ccb8c426c3dba127b0e2cfd0b71e51" }
+getrandom = "0.3"
+
+# Workspace dependencies
+utils = { path = "utils" }
+collider_generator = { path = "collider_generator" }
+common_model = { path = "common_model" }
+registry = { path = "registry" }
+model = { path = "model" }
+
+[workspace.lints.rust]
+# Mark `bevy_lint` as a valid `cfg`, as it is set when the Bevy linter runs.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(bevy_lint)"] }
+
+[workspace.lints.clippy]
+# Bevy supplies arguments to systems via dependency injection, so it's natural for systems to
+# request more than 7 arguments, which would undesirably trigger this lint.
+too_many_arguments = "allow"
+# Queries may access many components, which would undesirably trigger this lint.
+type_complexity = "allow"
+disallowed_methods = "deny"
+disallowed_types = "deny"
+string_slice = "warn"
+inconsistent_struct_constructor = "warn"
+inefficient_to_string = "warn"
+infinite_loop = "warn"
+items_after_statements = "warn"
+iter_on_empty_collections = "warn"
+manual_assert = "warn"
+manual_let_else = "warn"
+map_unwrap_or = "warn"
+map_with_unused_argument_over_ranges = "warn"
+match_same_arms = "warn"
+mismatching_type_param_order = "warn"
+missing_asserts_for_indexing = "warn"
+#missing_const_for_fn = "allow" # add to individual crates
+#missing_panics_doc = "allow" # add to individual crates
+needless_continue = "warn"
+non_std_lazy_statics = "warn"
+nonstandard_macro_braces = "warn"
+or_fun_call = "warn"
+redundant_closure_for_method_calls = "warn"
+semicolon_if_nothing_returned = "warn"
+semicolon_inside_block = "warn"
+significant_drop_tightening = "warn"
+single_match_else = "warn"
+#stable_sort_primitive = "allow" # add to math crates
+unused_trait_names = "warn"
+used_underscore_binding = "warn"
+used_underscore_items = "warn"
+needless_pass_by_value = "warn"
+must_use_candidate = "warn"
+
+# You can configure the warning levels of Bevy lints here. For a list of all lints, see:
+# <https://thebevyflock.github.io/bevy_cli/bevy_lint/lints/>
+[workspace.metadata.bevy_lint]
+panicking_methods = "deny"
+missing_reflect = "warn"
+pedantic = "warn"
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
+
+# Remove expensive debug assertions due to <https://github.com/bevyengine/bevy/issues/14291>
+[profile.dev.package.wgpu-types]
+debug-assertions = false
+
+[profile.release]
+# Compile the entire crate as one unit.
+# Slows compile times, marginal improvements.
+codegen-units = 1
+# Do a second optimization pass over the entire program, including dependencies.
+# Slows compile times, marginal improvements.
+lto = "thin"
+
+# This profile will be used by `bevy run web` automatically.
+[profile.web-release]
+# Default to release profile values.
+inherits = "release"
+# Optimize with size in mind (also try "z", sometimes it is better).
+# Slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "s"
+# Strip all debugging information from the binary to slightly reduce file size.
+strip = "debuginfo"
+
+# Optimize for build time in CI.
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+codegen-units = 4
+
+[profile.ci.package."*"]
+opt-level = 0

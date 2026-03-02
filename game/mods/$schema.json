@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModModel",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "Spaceship": {
+          "$ref": "#/$defs/Entry%3CSpaceshipModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "Spaceship"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "GameSetting": {
+          "$ref": "#/$defs/GameSettings"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "GameSetting"
+      ]
+    }
+  ],
+  "$defs": {
+    "ColorDataSerialized": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "float"
+          },
+          "maxItems": 4,
+          "minItems": 4
+        },
+        {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "number",
+              "format": "float"
+            },
+            "b": {
+              "type": "number",
+              "format": "float"
+            },
+            "g": {
+              "type": "number",
+              "format": "float"
+            },
+            "r": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          "required": [
+            "r",
+            "g",
+            "b",
+            "a"
+          ]
+        }
+      ]
+    },
+    "ColorModel": {
+      "$ref": "#/$defs/ColorDataSerialized"
+    },
+    "Entry<SpaceshipModel>": {
+      "type": "object",
+      "properties": {
+        "controller": {
+          "$ref": "#/$defs/TankControllerModel"
+        },
+        "id": {
+          "type": "string"
+        },
+        "model_size": {
+          "type": "number",
+          "format": "float"
+        },
+        "sprite": {
+          "$ref": "#/$defs/HandleId"
+        }
+      },
+      "required": [
+        "id",
+        "sprite",
+        "model_size",
+        "controller"
+      ]
+    },
+    "GameSettings": {
+      "type": "object",
+      "properties": {
+        "draw_grid": {
+          "type": "boolean"
+        },
+        "grid_color": {
+          "$ref": "#/$defs/ColorModel"
+        },
+        "grid_scale": {
+          "type": "number",
+          "format": "float"
+        },
+        "zoom": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "required": [
+        "zoom",
+        "draw_grid",
+        "grid_color",
+        "grid_scale"
+      ]
+    },
+    "HandleId": {
+      "type": "string"
+    },
+    "TankControllerModel": {
+      "type": "object",
+      "properties": {
+        "acceleration_force": {
+          "type": "number",
+          "format": "float"
+        },
+        "braking_force": {
+          "type": "number",
+          "format": "float"
+        },
+        "deceleration_force": {
+          "type": "number",
+          "format": "float"
+        },
+        "max_angular_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "max_speed": {
+          "type": "number",
+          "format": "float"
+        },
+        "turn_torgue": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "required": [
+        "acceleration_force",
+        "deceleration_force",
+        "braking_force",
+        "turn_torgue",
+        "max_speed",
+        "max_angular_speed"
+      ]
+    }
+  }
+}

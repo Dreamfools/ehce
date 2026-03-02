@@ -1,0 +1,16 @@
+[package]
+name = "registry"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rootcause = { workspace = true }
+bevy_reflect = { workspace = true }
+foldhash = { workspace = true }
+ustr = { workspace = true, features = ["serde"] }
+itertools = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+schemars = { workspace = true }
+
+[lints]
+workspace = true

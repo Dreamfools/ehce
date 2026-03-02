@@ -1,0 +1,7 @@
+ignore-interior-mutability = ["bytes::Bytes", "lockfree_object_pool::LinearReusable"]
+disallowed-methods = ["std::cmp::Ord::min", "std::cmp::Ord::max"]
+disallowed-types = ["std::collections::HashMap", "std::collections::HashSet", "ahash::AHashMap", "ahash::AHashSet", "ahash::AHasher", "ahash::RandomState", "dashmap::DashMap", "dashmap::DashSet", "std::sync::Mutex", "std::sync::RwLock"]
+standard-macro-braces = [
+    { name = "smallvec", brace = "[" },
+    { name = "smallvec_n", brace = "[" }
+]

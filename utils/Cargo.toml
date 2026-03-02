@@ -1,0 +1,22 @@
+[package]
+name = "utils"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ahash = { workspace = true, default-features = false, features = ["no-rng", "std"] }
+dashmap = { workspace = true }
+num-traits = { workspace = true }
+ordermap = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tracing = { workspace = true }
+schemars = { workspace = true }
+csscolorparser = { workspace = true }
+thiserror = { workspace = true }
+glam = { workspace = true, features = ["serde"] }
+typenum = { workspace = true, features = ["const-generics"] }
+bevy_color = { workspace = true }
+rootcause = { workspace = true }
+
+[lints]
+workspace = true

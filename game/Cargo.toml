@@ -1,0 +1,60 @@
+[package]
+name = "game"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true, default-features = false, features = ["2d"] }
+avian2d = { workspace = true }
+inline_tweak = { workspace = true }
+utils = { workspace = true }
+registry = { workspace = true }
+rootcause = { workspace = true }
+model = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_json5 = { workspace = true }
+thiserror = { workspace = true }
+schemars = { workspace = true }
+fs-err = { workspace = true }
+bevy_asset = { workspace = true }
+
+[target.wasm32-unknown-unknown.dependencies]
+getrandom = { workspace = true, features = ["wasm_js"] }
+
+[target.x86_64-unknown-linux-gnu.dependencies]
+wayland-sys = { workspace = true, features = ["dlopen"] }
+
+
+[lints]
+workspace = true
+
+[features]
+# Default to a native dev build.
+default = ["dev_native"]
+dev = [
+    # Improve compile times for dev builds by linking Bevy as a dynamic library.
+    "bevy/dynamic_linking",
+    "bevy/bevy_dev_tools",
+    "bevy/bevy_ui_debug",
+    # Improve error messages coming from Bevy
+    "bevy/track_location",
+]
+dev_native = [
+    "dev",
+    # Enable asset hot reloading for native dev builds.
+    "bevy/file_watcher",
+    # Enable embedded asset hot reloading for native dev builds.
+    "bevy/embedded_watcher",
+]
+
+[package.metadata.bevy_cli.release]
+# Disable dev features for release builds.
+default-features = false
+
+[package.metadata.bevy_cli.web]
+# Disable native features for web builds.
+default-features = false
+
+[package.metadata.bevy_cli.web.dev]
+features = ["dev"]

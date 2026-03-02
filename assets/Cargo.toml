@@ -1,0 +1,33 @@
+[package]
+name = "assets"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+image = { workspace = true, default-features = false, features = ["png"] }
+utils = { workspace = true }
+parking_lot = { workspace = true }
+registry = { workspace = true }
+miette = { workspace = true }
+tracing = { workspace = true }
+itertools = { workspace = true }
+facet = { workspace = true }
+schemars = { workspace = true }
+float-ord = { workspace = true }
+ouroboros = { workspace = true }
+glam = { workspace = true, features = ["serde"] }
+serde_json5 = { workspace = true }
+serde_json = { workspace = true }
+serde_path_to_error = { workspace = true }
+toml = { workspace = true }
+serde_norway = { workspace = true }
+tinyvec = { workspace = true, features = ["serde"] }
+num-traits = { workspace = true }
+common_model = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+assets_manager = { workspace = true, features = ["embedded"] }
+
+[lints]
+workspace = true
