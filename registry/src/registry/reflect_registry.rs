@@ -1,12 +1,12 @@
 use crate::path::FieldPath;
-use crate::registry::TraverseRegistry;
 use crate::registry::id::{IdRef, RawId};
-use crate::registry::shaped_map::{ReflectTypeMap, ReflectTypeStorage, shaped_default};
+use crate::registry::shaped_map::{shaped_default, ReflectTypeMap, ReflectTypeStorage};
+use crate::registry::TraverseRegistry;
 use bevy_reflect::{Reflect, Reflectable, Type};
 use itertools::Itertools as _;
-use std::any::{Any, TypeId};
-use std::collections::BTreeSet;
+use std::any::TypeId;
 use std::collections::hash_map::Entry;
+use std::collections::BTreeSet;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Index;

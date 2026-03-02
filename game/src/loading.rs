@@ -11,8 +11,8 @@ use bevy::diagnostic::FrameCount;
 use bevy::image::Image;
 use bevy::log::{error, info};
 use bevy::prelude::{
-    Commands, IntoScheduleConfigs, Local, Message, MessageReader, MessageWriter, Messages,
-    NextState, OnEnter, Query, Res, ResMut, Resource, in_state,
+    in_state, Commands, IntoScheduleConfigs, Local, Message, MessageReader, MessageWriter,
+    Messages, NextState, OnEnter, Query, Res, ResMut, Resource,
 };
 use bevy::reflect::Reflect;
 use bevy::time::{Time, Timer, TimerMode};
@@ -23,7 +23,7 @@ use registry::registry::id::RawId;
 use registry::registry::reflect_registry::BuildReflectRegistry;
 use rootcause::prelude::ResultExt;
 use rootcause::report_collection::ReportCollection;
-use rootcause::{IntoReport, Report, bail, report};
+use rootcause::{bail, report, IntoReport, Report};
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 use std::env;

@@ -1,5 +1,5 @@
 use bevy_reflect::Type;
-use std::any::{Any, TypeId};
+use std::any::TypeId;
 use std::fmt::{Debug, Formatter};
 use std::hash::{BuildHasher as _, BuildHasherDefault, Hasher};
 

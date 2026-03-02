@@ -1,6 +1,6 @@
 use crate::state::GameState;
 use bevy::app::{App, FixedUpdate, Plugin};
-use bevy::prelude::{Component, IntoScheduleConfigs, Reflect, in_state};
+use bevy::prelude::{in_state, Component, IntoScheduleConfigs, Reflect};
 
 pub mod behavior;
 pub mod inputs;

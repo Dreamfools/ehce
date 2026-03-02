@@ -1,6 +1,6 @@
 use crate::path::{FieldPath, Segment};
-use crate::registry::TraverseRegistry;
 use crate::registry::id::RawId;
+use crate::registry::TraverseRegistry;
 use bevy_reflect::{PartialReflect, Reflect, ReflectKind, TypeInfo, VariantField, VariantType};
 use rootcause::bail;
 

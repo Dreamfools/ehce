@@ -1,5 +1,5 @@
 use crate::path::FieldPath;
-use bevy_reflect::{Reflect, Reflectable, Type, TypeInfo};
+use bevy_reflect::{Reflect, Reflectable, Type};
 use id::RawId;
 
 pub mod entry;
