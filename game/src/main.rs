@@ -1,3 +1,5 @@
+#![cfg_attr(bevy_lint, feature(register_tool), register_tool(bevy))]
+
 //! This example showcases how `Transform` interpolation or extrapolation can be used
 //! to make movement appear smooth at fixed timesteps.
 //!
@@ -22,12 +24,12 @@ mod state;
 mod combat;
 mod ecs_tools;
 
+use crate::combat::controller::ShipControllerPlugin;
 use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
 use crate::combat::controller::inputs::ControllerInputs;
 use crate::combat::controller::tank_controller::PhysicsTankController;
-use crate::combat::controller::ShipControllerPlugin;
 use crate::loading::json5_asset_plugin::Json5AssetPlugin;
-use crate::loading::{load_last_mod, DatabaseAsset};
+use crate::loading::{DatabaseAsset, load_last_mod};
 use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use crate::state::GameState;
 use avian2d::prelude::*;
@@ -44,7 +46,7 @@ use inline_tweak::tweak;
 use model::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
 
-fn main() {
+fn main() -> AppExit {
     let mut app = App::new();
 
     // Interpolation and extrapolation functionality is enabled by the `PhysicsInterpolationPlugin`.
@@ -91,7 +93,7 @@ fn main() {
     .add_systems(FixedUpdate, move_balls);
 
     // Run the app.
-    app.run();
+    app.run()
 }
 
 fn init_tick(
@@ -118,7 +120,7 @@ fn init_tick(
     }
 }
 
-#[derive(Component)]
+#[derive(Reflect, Component)]
 struct Ball;
 
 fn setup_scene(mut commands: Commands) {
@@ -175,7 +177,7 @@ fn reset_balls(mut commands: Commands, query: Query<Entity, With<PlayerBehavior>
     commands.run_system_cached(setup_ships);
 }
 
-#[derive(Component)]
+#[derive(Reflect, Component)]
 struct TimestepText;
 
 fn setup_text(mut commands: Commands) {

@@ -3,7 +3,7 @@ use crate::traverse::TraverseKind;
 use bevy_reflect::Reflect;
 use schemars::{JsonSchema, Schema, SchemaGenerator};
 use serde::de::{DeserializeSeed, Error, MapAccess, Visitor};
-use serde::{de, forward_to_deserialize_any, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de, forward_to_deserialize_any};
 use std::borrow::Cow;
 use std::fmt::Formatter;
 use std::marker::PhantomData;

@@ -1,11 +1,11 @@
 use bevy_asset::Handle;
 use bevy_image::Image;
 use bevy_reflect::{Reflect, Typed as _};
-use common_model::color::{default_white, is_default_white, ColorModel};
+use common_model::color::{ColorModel, default_white, is_default_white};
 use common_model::numbers::glam_wraps::UVec2Model;
 use registry::registry::id::{IdRef, RawId};
 use schemars::_private::serde_json::json;
-use schemars::{json_schema, JsonSchema, Schema, SchemaGenerator};
+use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::{Error, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;

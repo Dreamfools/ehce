@@ -57,7 +57,11 @@ pub fn update_player_behavior(
                     0.0
                 };
                 input.direction = Vec2::new(left + right, up + down).normalize_or_zero();
-                input.throttle = if input.direction != Vec2::ZERO { 1.0 } else { 0.0 };
+                input.throttle = if input.direction != Vec2::ZERO {
+                    1.0
+                } else {
+                    0.0
+                };
             }
         }
     }

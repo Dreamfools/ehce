@@ -71,19 +71,12 @@ pub fn compute_collider(
             }
         }));
 
-        vertices.extend(
-            triangulation
-                .vertices
-                .chunks_exact(2)
-                .map(|e| {
-                    debug_assert_eq!(e.len(), 2);
-                    // SAFETY: We are guaranteed that the chunk will always have 2 elements, so
-                    // we can safely access them by index
-                    unsafe {
-                        Vector::new(*e.get_unchecked(0), -e.get_unchecked(1))
-                    }
-                }),
-        );
+        vertices.extend(triangulation.vertices.chunks_exact(2).map(|e| {
+            debug_assert_eq!(e.len(), 2);
+            // SAFETY: We are guaranteed that the chunk will always have 2 elements, so
+            // we can safely access them by index
+            unsafe { Vector::new(*e.get_unchecked(0), -e.get_unchecked(1)) }
+        }));
     }
     Ok(Collider::trimesh(vertices, indices))
 }

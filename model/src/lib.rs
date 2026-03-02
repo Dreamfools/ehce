@@ -21,7 +21,7 @@ pub enum ModModel {
 }
 
 impl ModModel {
-    #[must_use] 
+    #[must_use]
     pub fn required_singletons() -> Vec<&'static Type> {
         vec![GameSettings::type_info().ty()]
     }

@@ -1,16 +1,16 @@
 use crate::loading::ModLoadingPlugin;
 use bevy::app::{App, First, Plugin};
-use bevy::prelude::{AppExtStates as _, Message, Resource, States, SystemSet};
+use bevy::prelude::{AppExtStates as _, Message, Reflect, Resource, States, SystemSet};
 use bevy::state::state::FreelyMutableState;
 use registry::registry::reflect_registry::ReflectRegistry;
-use rootcause::Report;
+use rootcause::{Report, report};
 
 #[derive(Debug)]
 pub struct ModPlugin;
 
 impl Plugin for ModPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(First, HotReloading);
+        app.configure_sets(First, HotReloadingSystems);
         app.insert_state(ModState::default())
             .add_message::<WantLoadModMessage>()
             .add_message::<ModLoadErrorMessage>()
@@ -18,7 +18,7 @@ impl Plugin for ModPlugin {
             .add_plugins(ModLoadingPlugin);
     }
 }
-#[derive(Debug, Resource)]
+#[derive(Debug, Reflect, Resource)]
 pub struct ModData {
     pub registry: ReflectRegistry,
     // pub assets: FxBiHashMap<Utf8PathBuf, RegistryId>,
@@ -44,7 +44,7 @@ impl FreelyMutableState for ModState {}
 /// Message that triggers loading of a new mod
 ///
 /// Should generally be only raised by app code, but not listened to
-#[derive(Debug, Message)]
+#[derive(Debug, Reflect, Message)]
 pub struct WantLoadModMessage;
 
 /// Message that is triggered when mod loading fails for any reason
@@ -53,8 +53,8 @@ pub struct WantLoadModMessage;
 ///
 /// Errors are logged via error!, so use custom tracing frontend to report
 /// errors to the user
-#[derive(Debug, Message)]
-pub struct ModLoadErrorMessage(pub Report);
+#[derive(Debug, Reflect, Message)]
+pub struct ModLoadErrorMessage(#[reflect(ignore, default = "default_report")] pub Report);
 
 /// Message that is triggered when mod is loaded successfully
 ///
@@ -62,8 +62,14 @@ pub struct ModLoadErrorMessage(pub Report);
 /// for this event, and it should drain this event as soon as possible
 ///
 /// Payload is a full mod data
-#[derive(Debug, Message)]
+#[derive(Debug, Reflect, Message)]
 pub struct ModLoadedMessage(pub ModData);
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub struct HotReloading;
+pub struct HotReloadingSystems;
+
+fn default_report() -> Report {
+    report!(
+        "<REFLECTION DEFAULT> ModLoadErrorMessage was created without a report, this is likely a bug in the code that creates this message"
+    )
+}

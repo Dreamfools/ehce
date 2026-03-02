@@ -1,21 +1,24 @@
 use crate::path::FieldPath;
-use crate::registry::id::{IdRef, RawId};
-use crate::registry::shaped_map::{shaped_default, ReflectTypeMap, ReflectTypeStorage};
 use crate::registry::TraverseRegistry;
+use crate::registry::id::{IdRef, RawId};
+use crate::registry::shaped_map::{ReflectTypeMap, ReflectTypeStorage, shaped_default};
 use bevy_reflect::{Reflect, Reflectable, Type};
 use itertools::Itertools as _;
 use std::any::TypeId;
-use std::collections::hash_map::Entry;
 use std::collections::BTreeSet;
+use std::collections::hash_map::Entry;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Index;
 use ustr::{UstrMap, UstrSet};
 
-#[derive(Debug)]
+#[derive(Debug, Reflect)]
 pub struct ReflectRegistry {
+    #[reflect(ignore)]
     ids: ReflectTypeMap<UstrMap<Vec<FieldPath>>>,
+    #[reflect(ignore)]
     entries: ReflectTypeMap<UstrMap<(FieldPath, Box<dyn Reflect>)>>,
+    #[reflect(ignore)]
     singletons: ReflectTypeMap<(FieldPath, Box<dyn Reflect>)>,
 }
 
@@ -319,7 +322,9 @@ impl TraverseRegistry for BuildReflectRegistry {
     ) -> rootcause::Result<()> {
         debug_assert_eq!(
             Some(ty_shape),
-            entry.get_represented_type_info().map(bevy_reflect::TypeInfo::ty)
+            entry
+                .get_represented_type_info()
+                .map(bevy_reflect::TypeInfo::ty)
         );
 
         let ty = ty_shape.id();
@@ -356,7 +361,9 @@ impl TraverseRegistry for BuildReflectRegistry {
     ) -> rootcause::Result<()> {
         debug_assert_eq!(
             Some(ty_shape),
-            singleton.get_represented_type_info().map(bevy_reflect::TypeInfo::ty)
+            singleton
+                .get_represented_type_info()
+                .map(bevy_reflect::TypeInfo::ty)
         );
 
         let ty = ty_shape.id();

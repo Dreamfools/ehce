@@ -1,6 +1,6 @@
 use crate::path::{FieldPath, Segment};
-use crate::registry::id::RawId;
 use crate::registry::TraverseRegistry;
+use crate::registry::id::RawId;
 use bevy_reflect::{PartialReflect, Reflect, ReflectKind, TypeInfo, VariantField, VariantType};
 use rootcause::bail;
 
@@ -130,7 +130,8 @@ fn traverse_inner(
                     .get_represented_type_info()
                     .expect("IdRef has represented type info");
                 let generic_ty = info
-                    .generics().first()
+                    .generics()
+                    .first()
                     .expect("IdRef has one generic type argument")
                     .ty();
 

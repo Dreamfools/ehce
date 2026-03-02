@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 use std::ops::{Add, Index, IndexMut};
-use typenum::{Const, IsGreater, IsLessOrEqual, ToUInt, Unsigned, B1, U0};
+use typenum::{B1, Const, IsGreater, IsLessOrEqual, ToUInt, U0, Unsigned};
 
 pub type SmallIndex<const LIMIT: usize> = U8Index<<Const<LIMIT> as ToUInt>::Output>;
 

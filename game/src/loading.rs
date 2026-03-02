@@ -1,5 +1,6 @@
 use crate::mods::{
-    HotReloading, ModData, ModLoadErrorMessage, ModLoadedMessage, ModState, WantLoadModMessage,
+    HotReloadingSystems, ModData, ModLoadErrorMessage, ModLoadedMessage, ModState,
+    WantLoadModMessage,
 };
 use crate::state::SimpleStateObjectPlugin;
 use bevy::app::{App, First, Plugin, Update};
@@ -82,14 +83,15 @@ impl Plugin for ModLoadingPlugin {
                 First,
                 (asset_tracer, hot_reload.run_if(in_state(ModState::Ready)))
                     .chain()
-                    .in_set(HotReloading),
+                    .in_set(HotReloadingSystems),
             );
     }
 }
 
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Default, Reflect, Resource)]
 struct LoadingStateData {
     folder_handles: Vec<(String, Handle<LoadedFolder>)>,
+    #[reflect(ignore)]
     not_ready_handles: HashMap<Handle<LoadedFolder>, HashSet<UntypedAssetId>>,
 }
 
@@ -440,7 +442,5 @@ fn construct_mod<'a, 'path>(
 
     let registry = reg.build()?;
 
-    Ok(ModData {
-        registry,
-    })
+    Ok(ModData { registry })
 }
