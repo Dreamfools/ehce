@@ -5,13 +5,16 @@ use bevy::log::error;
 use bevy::prelude::Image;
 use contour::ContourBuilder;
 use geo::{Simplify, TriangulateEarcut};
-use miette::Diagnostic;
 use thiserror::Error;
 
-#[derive(Debug, Error, Diagnostic)]
+#[derive(Debug, Error)]
 pub enum ColliderComputationError {
     #[error("Provided width and height values don't match bitmap length. {} * {} != {}", .width, .height, .len)]
-    BadDimensions { width: usize, height: usize, len: usize },
+    BadDimensions {
+        width: usize,
+        height: usize,
+        len: usize,
+    },
 }
 
 pub fn compute_collider(
@@ -88,10 +91,14 @@ pub fn compute_collider_for_texture(image: &Image, optimization_threshold: f32) 
         }
     }
 
-    compute_collider(processed.as_slice(), cols as usize, rows as usize, optimization_threshold).unwrap_or_else(
-        |err| {
-            error!(?err);
-            std::process::exit(1)
-        },
+    compute_collider(
+        processed.as_slice(),
+        cols as usize,
+        rows as usize,
+        optimization_threshold,
     )
+    .unwrap_or_else(|err| {
+        error!(?err);
+        std::process::exit(1)
+    })
 }

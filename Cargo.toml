@@ -20,7 +20,6 @@ geo = { version = "0.31.0", default-features = false }
 glam = "0.30"
 inline_tweak = "1.2.4"
 itertools = "0.14.0"
-miette = "7.6.0"
 num-traits = "0.2.19"
 ordermap = "1.1"
 rand = "0.9"

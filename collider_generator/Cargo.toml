@@ -8,7 +8,6 @@ bevy = { workspace = true, default-features = false }
 avian2d = { workspace = true }
 contour = { workspace = true, features = ["f32"] }
 geo = { workspace = true, default-features = false, features = ["earcutr"] }
-miette = { workspace = true }
 thiserror = { workspace = true }
 
 [lints]
