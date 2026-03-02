@@ -1,3 +1,4 @@
+use bevy_reflect::Reflect;
 use num_traits::{PrimInt, Unsigned};
 use schemars::_private::serde_json::Value;
 use schemars::{JsonSchema, Schema, SchemaGenerator};
@@ -6,7 +7,6 @@ use std::borrow::Cow;
 use std::fmt;
 use std::fmt::{Debug, Display};
 use std::ops::Deref;
-use bevy_reflect::Reflect;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -30,12 +30,14 @@ impl<T: PrimInt + Unsigned, const MIN: u64, const MAX: u64> UIntInRange<T, MIN, 
     }
 
     #[inline]
-    #[must_use] pub fn min() -> Self {
+    #[must_use]
+    pub fn min() -> Self {
         Self(T::from(MIN).unwrap())
     }
-    
+
     #[inline]
-    #[must_use] pub fn max() -> Self {
+    #[must_use]
+    pub fn max() -> Self {
         Self(T::from(MAX).unwrap())
     }
 
@@ -60,7 +62,9 @@ impl<T: PrimInt + Unsigned, const MIN: u64, const MAX: u64> Deref for UIntInRang
     }
 }
 
-impl<T: PrimInt + Unsigned + Display, const MIN: u64, const MAX: u64> Display for UIntInRange<T, MIN, MAX> {
+impl<T: PrimInt + Unsigned + Display, const MIN: u64, const MAX: u64> Display
+    for UIntInRange<T, MIN, MAX>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
@@ -78,7 +82,9 @@ impl<'de, T: PrimInt + Unsigned + Debug + Deserialize<'de>, const MIN: u64, cons
     }
 }
 
-impl<T: PrimInt + Unsigned + Debug + JsonSchema, const MIN: u64, const MAX: u64> JsonSchema for UIntInRange<T, MIN, MAX> {
+impl<T: PrimInt + Unsigned + Debug + JsonSchema, const MIN: u64, const MAX: u64> JsonSchema
+    for UIntInRange<T, MIN, MAX>
+{
     fn inline_schema() -> bool {
         T::inline_schema()
     }

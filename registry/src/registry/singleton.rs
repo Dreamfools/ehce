@@ -1,7 +1,7 @@
+use crate::traverse::TraverseKind;
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::traverse::TraverseKind;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
 #[reflect(@TraverseKind::Singleton)]

@@ -1,15 +1,13 @@
+use bevy_reflect::Type;
 use std::any::{Any, TypeId};
 use std::fmt::{Debug, Formatter};
 use std::hash::{BuildHasher as _, BuildHasherDefault, Hasher};
-use bevy_reflect::Type;
 
 #[allow(clippy::disallowed_types)]
-pub type ReflectTypeMap<T> = std::collections::HashMap<TypeId, ReflectTypeStorage<T>, BuildHasherDefault<TypeIdHasher>>;
+pub type ReflectTypeMap<T> =
+    std::collections::HashMap<TypeId, ReflectTypeStorage<T>, BuildHasherDefault<TypeIdHasher>>;
 
-pub fn shaped_default<'a, T: Default>(
-    map: &'a mut ReflectTypeMap<T>,
-    ty: &Type,
-) -> &'a mut T {
+pub fn shaped_default<'a, T: Default>(map: &'a mut ReflectTypeMap<T>, ty: &Type) -> &'a mut T {
     map.entry(ty.id())
         .or_insert_with(|| ReflectTypeStorage {
             data: T::default(),

@@ -1,8 +1,8 @@
+use crate::controllers::{ShipControllerModel, TankControllerModel};
+use crate::sprite::{SpriteId, SpriteModel};
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::controllers::{ShipControllerModel, TankControllerModel};
-use crate::sprite::{SpriteId, SpriteModel};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
 pub struct SpaceshipModel {

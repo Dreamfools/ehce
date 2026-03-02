@@ -1,7 +1,8 @@
 use crate::path::FieldPath;
 use crate::registry::TraverseRegistry;
 use crate::registry::id::{IdRef, RawId};
-use crate::registry::shaped_map::{ReflectTypeStorage, shaped_default, ReflectTypeMap};
+use crate::registry::shaped_map::{ReflectTypeMap, ReflectTypeStorage, shaped_default};
+use bevy_reflect::{Reflect, Reflectable, Type};
 use itertools::Itertools as _;
 use std::any::{Any, TypeId};
 use std::collections::BTreeSet;
@@ -9,7 +10,6 @@ use std::collections::hash_map::Entry;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::Index;
-use bevy_reflect::{Reflect, Reflectable, Type};
 use ustr::{UstrMap, UstrSet};
 
 #[derive(Debug)]
@@ -52,7 +52,7 @@ impl ReflectRegistry {
     /// Returns an iterator over all entries of type `T` in the registry
     pub fn iter<T: Sized + Reflectable>(
         &self,
-    ) -> impl Iterator<Item=(IdRef<T>, (&FieldPath, &T))> {
+    ) -> impl Iterator<Item = (IdRef<T>, (&FieldPath, &T))> {
         let type_id = TypeId::of::<T>();
         self.entries.get(&type_id).into_iter().flat_map(|storage| {
             debug_assert_eq!(T::type_info().ty(), storage.ty());
@@ -184,10 +184,7 @@ impl Display for BuildRegistryError {
                         write!(
                             f,
                             " at {}",
-                            paths
-                                .iter()
-                                .map(FieldPath::format_path)
-                                .join(", ")
+                            paths.iter().map(FieldPath::format_path).join(", ")
                         )?;
                     }
                 }
@@ -204,10 +201,7 @@ impl Display for BuildRegistryError {
                         write!(
                             f,
                             " at {}",
-                            paths
-                                .iter()
-                                .map(FieldPath::format_path)
-                                .join(", ")
+                            paths.iter().map(FieldPath::format_path).join(", ")
                         )?;
                     }
                 }
@@ -265,7 +259,7 @@ impl BuildReflectRegistry {
     /// Returns the built registry if there are no ID errors, otherwise returns
     /// an error containing information about ID errors
     pub fn build(mut self) -> Result<ReflectRegistry, BuildRegistryError> {
-        dbg!(&self);
+        // dbg!(&self);
         self.error.missing_ids.retain(|_, v| !v.data().is_empty());
         self.error
             .duplicate_entries
@@ -316,8 +310,17 @@ impl TraverseRegistry for BuildReflectRegistry {
         Ok(())
     }
 
-    fn consume_entry(&mut self, path: &FieldPath, ty_shape: &Type, id: RawId, entry: Box<dyn Reflect>) -> rootcause::Result<()> {
-        debug_assert_eq!(Some(ty_shape), entry.get_represented_type_info().map(|i|i.ty()));
+    fn consume_entry(
+        &mut self,
+        path: &FieldPath,
+        ty_shape: &Type,
+        id: RawId,
+        entry: Box<dyn Reflect>,
+    ) -> rootcause::Result<()> {
+        debug_assert_eq!(
+            Some(ty_shape),
+            entry.get_represented_type_info().map(|i| i.ty())
+        );
 
         let ty = ty_shape.id();
 
@@ -345,17 +348,22 @@ impl TraverseRegistry for BuildReflectRegistry {
         Ok(())
     }
 
-    fn consume_singleton(&mut self, path: &FieldPath, ty_shape: &Type, singleton: Box<dyn Reflect>) -> rootcause::Result<()> {
-        debug_assert_eq!(Some(ty_shape), singleton.get_represented_type_info().map(|i|i.ty()));
+    fn consume_singleton(
+        &mut self,
+        path: &FieldPath,
+        ty_shape: &Type,
+        singleton: Box<dyn Reflect>,
+    ) -> rootcause::Result<()> {
+        debug_assert_eq!(
+            Some(ty_shape),
+            singleton.get_represented_type_info().map(|i| i.ty())
+        );
 
         let ty = ty_shape.id();
 
         match self.registry.singletons.entry(ty) {
             Entry::Vacant(e) => {
-                e.insert(ReflectTypeStorage::new(
-                    (path.clone(), singleton),
-                    ty_shape,
-                ));
+                e.insert(ReflectTypeStorage::new((path.clone(), singleton), ty_shape));
                 Ok(())
             }
             Entry::Occupied(e) => {

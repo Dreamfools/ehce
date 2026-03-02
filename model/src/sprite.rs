@@ -1,3 +1,5 @@
+use bevy_asset::Handle;
+use bevy_image::Image;
 use bevy_reflect::{Reflect, Typed};
 use common_model::color::{ColorModel, default_white, is_default_white};
 use common_model::numbers::glam_wraps::UVec2Model;
@@ -8,8 +10,6 @@ use serde::de::{Error, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
 use std::fmt::{Debug, Formatter};
-use bevy_asset::Handle;
-use bevy_image::Image;
 
 /// Sprite data, currently contains texture and an optional tint
 ///

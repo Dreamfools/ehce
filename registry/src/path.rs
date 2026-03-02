@@ -18,7 +18,8 @@ pub struct FieldPath {
 }
 
 impl FieldPath {
-    #[must_use] pub fn new(root: &str) -> Self {
+    #[must_use]
+    pub fn new(root: &str) -> Self {
         FieldPath {
             root: root.to_string(),
             segments: Vec::new(),
@@ -32,7 +33,8 @@ impl FieldPath {
         res
     }
 
-    #[must_use] pub fn format_path(&self) -> String {
+    #[must_use]
+    pub fn format_path(&self) -> String {
         let mut path_str = self.root.clone();
 
         for s in &self.segments {

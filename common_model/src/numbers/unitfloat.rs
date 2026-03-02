@@ -1,3 +1,4 @@
+use bevy_reflect::Reflect;
 use num_traits::{ConstOne, ConstZero, Float, Zero};
 use schemars::_private::serde_json::Value;
 use schemars::{JsonSchema, Schema, SchemaGenerator};
@@ -6,7 +7,6 @@ use std::borrow::Cow;
 use std::fmt;
 use std::fmt::{Debug, Display};
 use std::ops::{Add, Deref};
-use bevy_reflect::Reflect;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

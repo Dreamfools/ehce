@@ -1,3 +1,4 @@
+use bevy_color::ColorToPacked;
 use bevy_reflect::Reflect;
 use float_ord::FloatOrd;
 use schemars::JsonSchema;
@@ -6,7 +7,6 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
-use bevy_color::ColorToPacked;
 
 #[derive(Copy, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
 pub struct ColorModel(
@@ -85,4 +85,3 @@ impl Deref for ColorModel {
         &self.0
     }
 }
-

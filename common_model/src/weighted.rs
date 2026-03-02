@@ -1,13 +1,13 @@
+use crate::numbers::nonneg::FiniteNonNegative;
+use bevy_reflect::Reflect;
 use schemars::{JsonSchema, Schema, SchemaGenerator};
 use serde::de::{MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::Formatter;
-use bevy_reflect::Reflect;
 use weighted_rand::builder::{NewBuilder as _, WalkerTableBuilder};
 use weighted_rand::table::WalkerTable;
-use crate::numbers::nonneg::FiniteNonNegative;
 
 #[derive(Debug, Clone, Serialize, Reflect)]
 pub struct WeightedItem<T> {

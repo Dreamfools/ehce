@@ -1,10 +1,10 @@
+use bevy_reflect::Reflect;
 use num_traits::{Num, NumAssignRef};
 use schemars::{JsonSchema, Schema, SchemaGenerator};
+use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
 use std::fmt::Debug;
-use bevy_reflect::Reflect;
-use serde::de::Error;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Reflect)]
 pub struct RangeInclusiveModel<T: Debug + Clone + NumAssignRef + PartialOrd> {
