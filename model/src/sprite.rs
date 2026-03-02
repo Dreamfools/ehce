@@ -104,7 +104,10 @@ const _: () = {
 
         fn json_schema(generator: &mut SchemaGenerator) -> Schema {
             let mut color_schema = generator.subschema_for::<ColorModel>();
-            color_schema.insert("default".to_string(), serde_json::json!([1.0, 1.0, 1.0, 1.0]));
+            color_schema.insert(
+                "default".to_string(),
+                serde_json::json!([1.0, 1.0, 1.0, 1.0]),
+            );
 
             let desc = SpriteModel::type_info().docs();
 
