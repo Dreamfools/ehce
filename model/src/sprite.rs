@@ -4,7 +4,6 @@ use bevy_reflect::{Reflect, Typed as _};
 use common_model::color::{ColorModel, default_white, is_default_white};
 use common_model::numbers::glam_wraps::UVec2Model;
 use registry::registry::id::{IdRef, RawId};
-use schemars::_private::serde_json::json;
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::{Error, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -105,7 +104,7 @@ const _: () = {
 
         fn json_schema(generator: &mut SchemaGenerator) -> Schema {
             let mut color_schema = generator.subschema_for::<ColorModel>();
-            color_schema.insert("default".to_string(), json!([1.0, 1.0, 1.0, 1.0]));
+            color_schema.insert("default".to_string(), serde_json::json!([1.0, 1.0, 1.0, 1.0]));
 
             let desc = SpriteModel::type_info().docs();
 
