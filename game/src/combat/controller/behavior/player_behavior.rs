@@ -1,9 +1,8 @@
 use crate::combat::controller::inputs::ControllerInputs;
 use crate::ecs_tools::component_invariants;
 use bevy::input::ButtonInput;
-use bevy::log::info;
 use bevy::math::Vec2;
-use bevy::prelude::{Component, KeyCode, Query, Res, With};
+use bevy::prelude::{Component, KeyCode, Query, Res};
 use bevy::reflect::Reflect;
 
 #[derive(Debug, Clone, Reflect, Component)]
@@ -58,9 +57,7 @@ pub fn update_player_behavior(
                     0.0
                 };
                 input.direction = Vec2::new(left + right, up + down).normalize_or_zero();
-                input.throttle = (input.direction != Vec2::ZERO)
-                    .then_some(1.0)
-                    .unwrap_or(0.0);
+                input.throttle = if input.direction != Vec2::ZERO { 1.0 } else { 0.0 };
             }
         }
     }

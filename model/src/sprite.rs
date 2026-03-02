@@ -1,6 +1,6 @@
 use bevy_asset::Handle;
 use bevy_image::Image;
-use bevy_reflect::{Reflect, Typed};
+use bevy_reflect::{Reflect, Typed as _};
 use common_model::color::{default_white, is_default_white, ColorModel};
 use common_model::numbers::glam_wraps::UVec2Model;
 use registry::registry::id::{IdRef, RawId};

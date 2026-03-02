@@ -45,6 +45,7 @@ impl<T> WeightedCollection<T> {
 }
 
 const _: () = {
+    #[allow(dead_code)]
     #[derive(JsonSchema)]
     pub struct WeightedSchema<T> {
         pub item: T,
@@ -113,6 +114,7 @@ const _: () = {
 };
 
 const _: () = {
+    #[allow(dead_code)]
     #[derive(JsonSchema)]
     enum WeightedCollectionSchema<T> {
         Vec(Vec<WeightedItem<T>>),

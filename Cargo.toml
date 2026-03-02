@@ -83,7 +83,7 @@ single_match_else = "warn"
 unused_trait_names = "warn"
 used_underscore_binding = "warn"
 used_underscore_items = "warn"
-needless_pass_by_value = "warn"
+#needless_pass_by_value = "warn"
 must_use_candidate = "warn"
 
 # You can configure the warning levels of Bevy lints here. For a list of all lints, see:

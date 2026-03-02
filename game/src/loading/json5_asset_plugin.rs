@@ -1,6 +1,6 @@
 use bevy::app::{App, Plugin};
 use bevy::asset::io::Reader;
-use bevy::asset::{Asset, AssetApp, AssetLoader, LoadContext};
+use bevy::asset::{Asset, AssetApp as _, AssetLoader, LoadContext};
 use bevy::reflect::TypePath;
 use std::marker::PhantomData;
 use thiserror::Error;

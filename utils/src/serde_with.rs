@@ -61,10 +61,8 @@ pub mod color {
                         .map_err(|e| D::Error::custom(format!("color format error: {e}")))?;
                     Ok(bevy_color::LinearRgba::new(data.r, data.g, data.b, data.a))
                 }
-                ColorDataSerialized::Array([r, g, b, a]) => {
-                    Ok(bevy_color::LinearRgba::new(r, g, b, a))
-                }
-                ColorDataSerialized::Obj { r, g, b, a } => {
+                ColorDataSerialized::Array([r, g, b, a])
+                | ColorDataSerialized::Obj { r, g, b, a } => {
                     Ok(bevy_color::LinearRgba::new(r, g, b, a))
                 }
             }

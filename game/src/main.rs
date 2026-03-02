@@ -31,7 +31,6 @@ use crate::loading::{load_last_mod, DatabaseAsset};
 use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use crate::state::GameState;
 use avian2d::prelude::*;
-use bevy::camera::primitives::Frustum;
 use bevy::camera::ScalingMode;
 use bevy::{
     color::palettes::{
@@ -140,9 +139,9 @@ fn setup_scene(mut commands: Commands) {
 
 fn setup_ships(
     mut commands: Commands,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut mod_data: Res<ModData>,
+    _materials: ResMut<Assets<ColorMaterial>>,
+    _meshes: ResMut<Assets<Mesh>>,
+    mod_data: Res<ModData>,
 ) {
     let scout = &mod_data.registry[IdRef::<SpaceshipModel>::new(RawId::new("scout"))];
     let circle = Circle::new(30.0);
@@ -178,12 +177,6 @@ fn reset_balls(mut commands: Commands, query: Query<Entity, With<PlayerBehavior>
 
 #[derive(Component)]
 struct TimestepText;
-
-fn update_camera(q: Query<(&mut Frustum)>) {
-    for frustrum in q {
-        // frustrum.
-    }
-}
 
 fn setup_text(mut commands: Commands) {
     let font = TextFont {
@@ -284,10 +277,10 @@ fn move_balls(mut query: Query<&mut Transform, With<Ball>>) {
 
 fn handle_mod_loaded_error_message(mut errs: MessageReader<ModLoadErrorMessage>) {
     for msg in errs.read() {
-        error!("Something gone wrong.\n{:?}", msg)
+        error!("Something gone wrong.\n{:?}", msg.0);
     }
 }
 
 pub fn report_error(err: impl Into<rootcause::Report>) {
-    error!("Something gone wrong.\n{:?}", err.into())
+    error!("Something gone wrong.\n{:?}", err.into());
 }

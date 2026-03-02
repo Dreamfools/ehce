@@ -1,7 +1,6 @@
 use crate::combat::controller::inputs::ControllerInputs;
 use crate::ecs_tools::component_invariants;
 use avian2d::prelude::{AngularDamping, AngularVelocity, ComputedMass, LinearVelocity, RigidBody};
-use bevy::log::warn;
 use bevy::math::Vec2;
 use bevy::prelude::{Component, Query, Reflect, Res, Transform};
 use bevy::time::{Fixed, Time};
@@ -75,11 +74,11 @@ pub fn tank_controller_update(
                 let turn_angle = ship_direction.angle_to(want_direction);
                 if angular_velocity.0 != 0.0 && angular_velocity.0.signum() != turn_angle.signum() {
                     // rotating in opposite direction, start braking
-                    want_turn = 0.0
+                    want_turn = 0.0;
                 } else {
                     let distance = distance_traveled(
                         angular_velocity.0,
-                        torgue + angular_damping.map(|d| d.0).unwrap_or(0.0),
+                        torgue + angular_damping.map_or(0.0, |d| d.0),
                     );
                     if (distance - turn_angle.abs()) > std::f32::consts::PI / 180.0 {
                         // start braking
@@ -90,7 +89,7 @@ pub fn tank_controller_update(
                         // how much do we need to turn to get to the desired direction in one tick?
                         let turn_to_achieve = turn_angle / (torgue * dt);
 
-                        want_turn = turn_to_achieve.clamp(-1.0, 1.0)
+                        want_turn = turn_to_achieve.clamp(-1.0, 1.0);
                     }
                 }
             }
@@ -128,7 +127,7 @@ pub fn tank_controller_update(
             {
                 // When exceeding the speed limit, add some speed in the direction but reduce overall velocity to maintain the same speed
                 let acceleration_factor = (velocity_l2 / new_velocity_l2).sqrt();
-                linear_velocity.0 = new_velocity * acceleration_factor
+                linear_velocity.0 = new_velocity * acceleration_factor;
             } else {
                 linear_velocity.0 = new_velocity;
             }

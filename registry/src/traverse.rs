@@ -33,7 +33,7 @@ fn traverse_owning(
             let Some(TraverseKind::Entry) = kind else {
                 bail!("Traversed struct is not an Entry or Singleton");
             };
-            let mut item = item.reflect_ref().as_struct().expect("Entry is a struct");
+            let item = item.reflect_ref().as_struct().expect("Entry is a struct");
             let id_field = item.field("id").expect("Entry has `id` field as RawId");
             let id = id_field
                 .try_downcast_ref::<RawId>()
@@ -91,7 +91,7 @@ fn traverse_owning(
                 .expect("Enum variant field is a concrete type");
 
             path.with_segment(Segment::EnumVariant(variant_name.to_string()), |path| {
-                traverse_owning(&*data_field, path, registry)
+                traverse_owning(data_field, path, registry)
             })
         }
         _ => {
@@ -130,8 +130,7 @@ fn traverse_inner(
                     .get_represented_type_info()
                     .expect("IdRef has represented type info");
                 let generic_ty = info
-                    .generics()
-                    .get(0)
+                    .generics().first()
                     .expect("IdRef has one generic type argument")
                     .ty();
 

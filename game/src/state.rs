@@ -44,7 +44,7 @@ pub fn assert_state_object<S: States + Debug, T: Resource>(
         error!(
             ?state,
             "State object is missing after transitioning to a state"
-        )
+        );
     }
 }
 

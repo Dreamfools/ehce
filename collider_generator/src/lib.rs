@@ -1,10 +1,10 @@
 use avian2d::math::Vector;
 use avian2d::prelude::Collider;
-use bevy::color::Alpha;
+use bevy::color::Alpha as _;
 use bevy::log::error;
 use bevy::prelude::Image;
 use contour::ContourBuilder;
-use geo::{Simplify, TriangulateEarcut};
+use geo::{Simplify as _, TriangulateEarcut as _};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -59,23 +59,36 @@ pub fn compute_collider(
         let last_index = vertices.len();
 
         indices.extend(triangulation.triangle_indices.chunks_exact(3).map(|c| {
-            [
-                (c[0] + last_index) as u32,
-                (c[1] + last_index) as u32,
-                (c[2] + last_index) as u32,
-            ]
+            debug_assert_eq!(c.len(), 3);
+            // SAFETY: We are guaranteed that the chunk will always have 3 elements, so we can
+            // safely access them by index
+            unsafe {
+                [
+                    (c.get_unchecked(0) + last_index) as u32,
+                    (c.get_unchecked(1) + last_index) as u32,
+                    (c.get_unchecked(2) + last_index) as u32,
+                ]
+            }
         }));
 
         vertices.extend(
             triangulation
                 .vertices
                 .chunks_exact(2)
-                .map(|e| Vector::new(e[0], -e[1])),
+                .map(|e| {
+                    debug_assert_eq!(e.len(), 2);
+                    // SAFETY: We are guaranteed that the chunk will always have 2 elements, so
+                    // we can safely access them by index
+                    unsafe {
+                        Vector::new(*e.get_unchecked(0), -e.get_unchecked(1))
+                    }
+                }),
         );
     }
     Ok(Collider::trimesh(vertices, indices))
 }
 
+#[must_use]
 pub fn compute_collider_for_texture(image: &Image, optimization_threshold: f32) -> Collider {
     let rows = image.size().y;
     let cols = image.size().x;

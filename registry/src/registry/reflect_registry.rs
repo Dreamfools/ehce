@@ -319,7 +319,7 @@ impl TraverseRegistry for BuildReflectRegistry {
     ) -> rootcause::Result<()> {
         debug_assert_eq!(
             Some(ty_shape),
-            entry.get_represented_type_info().map(|i| i.ty())
+            entry.get_represented_type_info().map(bevy_reflect::TypeInfo::ty)
         );
 
         let ty = ty_shape.id();
@@ -356,7 +356,7 @@ impl TraverseRegistry for BuildReflectRegistry {
     ) -> rootcause::Result<()> {
         debug_assert_eq!(
             Some(ty_shape),
-            singleton.get_represented_type_info().map(|i| i.ty())
+            singleton.get_represented_type_info().map(bevy_reflect::TypeInfo::ty)
         );
 
         let ty = ty_shape.id();

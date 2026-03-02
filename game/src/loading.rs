@@ -11,8 +11,8 @@ use bevy::diagnostic::FrameCount;
 use bevy::image::Image;
 use bevy::log::{error, info};
 use bevy::prelude::{
-    in_state, Commands, IntoScheduleConfigs, Local, Message, MessageReader, MessageWriter,
-    Messages, NextState, OnEnter, Query, Res, ResMut, Resource,
+    Commands, IntoScheduleConfigs as _, Local, MessageReader, MessageWriter, Messages, NextState,
+    Query, Res, ResMut, Resource, in_state,
 };
 use bevy::reflect::Reflect;
 use bevy::time::{Time, Timer, TimerMode};
@@ -21,14 +21,14 @@ use model::ModModel;
 use registry::path::FieldPath;
 use registry::registry::id::RawId;
 use registry::registry::reflect_registry::BuildReflectRegistry;
-use rootcause::prelude::ResultExt;
+use rootcause::prelude::ResultExt as _;
 use rootcause::report_collection::ReportCollection;
-use rootcause::{bail, report, IntoReport, Report};
+use rootcause::{IntoReport as _, bail, report};
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 use std::env;
-use std::ops::DerefMut;
-use std::path::{Display, Path, PathBuf};
+use std::ops::DerefMut as _;
+use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use utils::map::{HashMap, HashSet};
 use utils::rootcause_ext::AttachField;
@@ -123,13 +123,13 @@ fn loading_initializer(
             .collect(),
         not_ready_handles: Default::default(),
     });
-    next_state.set(ModState::Loading)
+    next_state.set(ModState::Loading);
 }
 
 fn is_folder_loaded(
     asset_server: &AssetServer,
     folder_assets: &Assets<LoadedFolder>,
-    mut not_ready_handles: &mut HashMap<Handle<LoadedFolder>, HashSet<UntypedAssetId>>,
+    not_ready_handles: &mut HashMap<Handle<LoadedFolder>, HashSet<UntypedAssetId>>,
     handle: &Handle<LoadedFolder>,
 ) -> rootcause::Result<bool> {
     match asset_server.load_state(handle) {
@@ -148,9 +148,13 @@ fn is_folder_loaded(
         return Ok(false);
     };
 
-    let handles = not_ready_handles
-        .entry(handle.clone())
-        .or_insert_with(|| folder.handles.iter().map(|e| e.id()).collect());
+    let handles = not_ready_handles.entry(handle.clone()).or_insert_with(|| {
+        folder
+            .handles
+            .iter()
+            .map(bevy_asset::UntypedHandle::id)
+            .collect()
+    });
 
     let mut rg = ReportCollection::new();
 
@@ -159,8 +163,7 @@ fn is_folder_loaded(
         LoadState::Failed(err) => {
             let path = asset_server
                 .get_path(*id)
-                .map(|p| p.to_string())
-                .unwrap_or_else(|| "<unknown>".to_string());
+                .map_or_else(|| "<unknown>".to_string(), |p| p.to_string());
 
             rg.push(
                 err.into_report()
@@ -187,14 +190,14 @@ fn loader(
     folder_assets: Res<Assets<LoadedFolder>>,
     database_items: Res<Assets<DatabaseAsset>>,
     images: Res<Assets<Image>>,
-    mut db_asset_events: ResMut<Messages<AssetEvent<DatabaseAsset>>>,
+    _db_asset_events: ResMut<Messages<AssetEvent<DatabaseAsset>>>,
     mut data: ResMut<LoadingStateData>,
     mut err_evt: MessageWriter<ModLoadErrorMessage>,
     mut switch_evt: MessageWriter<ModLoadedMessage>,
-    frame: Res<FrameCount>,
+    _frame: Res<FrameCount>,
     mut state: ResMut<NextState<ModState>>,
-    mut wait_until: Local<Option<u32>>,
-    mut first_load_flag: Local<bool>,
+    _wait_until: Local<Option<u32>>,
+    _first_load_flag: Local<bool>,
 ) {
     let mut rg = ReportCollection::new();
     let mut all_loaded = true;
@@ -204,7 +207,7 @@ fn loader(
             &asset_server,
             &folder_assets,
             &mut data.not_ready_handles,
-            &handle,
+            handle,
         ) {
             Ok(ready) => {
                 all_loaded &= ready;
@@ -279,13 +282,17 @@ fn loader(
                     db_images.push((path, handle.clone().typed_debug_checked::<Image>()));
                 }
                 _ => {
-                    continue;
+                    error!(
+                        ?handle,
+                        id=?handle.type_id(),
+                        "Unexpected asset type in mod folder"
+                    );
                 }
             }
         }
     }
 
-    match construct_mod(data.folder_handles.clone(), db_files, db_images) {
+    match construct_mod(db_files, db_images) {
         Ok(data) => {
             info!("Mod is constructed, sending events");
             state.set(ModState::Pending);
@@ -299,7 +306,7 @@ fn loader(
     }
 }
 
-pub fn available_mods<'a>() -> rootcause::Result<impl IntoIterator<Item = String>> {
+pub fn available_mods() -> rootcause::Result<impl IntoIterator<Item = String>> {
     let mut dirs = vec![];
     for entry in fs_err::read_dir(*MOD_FOLDER)? {
         let entry = entry?;
@@ -340,10 +347,10 @@ fn asset_tracer(
     frame: Res<FrameCount>,
 ) {
     for evt in folder_evt.read() {
-        info!(frame = frame.0, ?evt, "Folder event")
+        info!(frame = frame.0, ?evt, "Folder event");
     }
     for evt in asset_evt.read() {
-        info!(frame = frame.0, ?evt, "Asset event")
+        info!(frame = frame.0, ?evt, "Asset event");
     }
 }
 
@@ -351,7 +358,7 @@ fn hot_reload(
     mut evt: MessageReader<AssetEvent<DatabaseAsset>>,
     _asset: Res<Assets<DatabaseAsset>>,
     asset_server: Res<AssetServer>,
-    loaded_mod: ResMut<ModData>,
+    _loaded_mod: ResMut<ModData>,
     mut load_mod_evt: MessageWriter<WantLoadModMessage>,
     mut buffer_timer: Local<Option<Timer>>,
     time: Res<Time>,
@@ -370,7 +377,7 @@ fn hot_reload(
             | AssetEvent::LoadedWithDependencies { .. }
             | AssetEvent::Unused { .. } => continue,
         };
-        let Some(path) = asset_server.get_path(*asset_id) else {
+        let Some(_path) = asset_server.get_path(*asset_id) else {
             continue;
         };
         // if !path.path().starts_with(&loaded_mod.mod_path) {
@@ -382,21 +389,20 @@ fn hot_reload(
     }
 
     if want_reload {
-        *buffer_timer = Some(Timer::from_seconds(1.0, TimerMode::Once))
-    } else if windows.iter().any(|e| e.focused) {
-        if let Some(timer) = buffer_timer.deref_mut() {
-            timer.tick(time.elapsed());
-            if timer.just_finished() {
-                info!("Initializing hot reload");
-                load_mod_evt.write(WantLoadModMessage);
-            }
-            *buffer_timer = None;
+        *buffer_timer = Some(Timer::from_seconds(1.0, TimerMode::Once));
+    } else if windows.iter().any(|e| e.focused)
+        && let Some(timer) = buffer_timer.deref_mut()
+    {
+        timer.tick(time.elapsed());
+        if timer.just_finished() {
+            info!("Initializing hot reload");
+            load_mod_evt.write(WantLoadModMessage);
         }
+        *buffer_timer = None;
     }
 }
 
 fn construct_mod<'a, 'path>(
-    folder_handles: Vec<(String, Handle<LoadedFolder>)>,
     files: impl IntoIterator<Item = (impl AsRef<Path>, &'a DatabaseAsset)>,
     images: impl IntoIterator<Item = (impl AsRef<Path>, Handle<Image>)>,
 ) -> rootcause::Result<ModData> {
@@ -427,7 +433,7 @@ fn construct_mod<'a, 'path>(
 
     for (path, asset) in files {
         let path_lossy = path.as_ref().to_string_lossy().into_owned();
-        registry::traverse::traverse(&asset.0, &FieldPath::new(&*path_lossy), &mut reg)
+        registry::traverse::traverse(&asset.0, &FieldPath::new(&path_lossy), &mut reg)
             .context("Failed to traverse mod asset")
             .attach_with(|| AttachField("Path", path_lossy))?;
     }
@@ -436,6 +442,5 @@ fn construct_mod<'a, 'path>(
 
     Ok(ModData {
         registry,
-        folder_handles,
     })
 }

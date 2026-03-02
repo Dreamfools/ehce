@@ -1,6 +1,6 @@
 use crate::settings::game_settings::GameSettings;
 use crate::spaceship::SpaceshipModel;
-use bevy_reflect::{Reflect, Type, Typed};
+use bevy_reflect::{Reflect, Type, Typed as _};
 pub use common_model as common;
 use registry::registry::entry::Entry;
 use registry::registry::singleton::Singleton;
@@ -21,6 +21,7 @@ pub enum ModModel {
 }
 
 impl ModModel {
+    #[must_use] 
     pub fn required_singletons() -> Vec<&'static Type> {
         vec![GameSettings::type_info().ty()]
     }

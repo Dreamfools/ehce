@@ -1,7 +1,6 @@
 use crate::loading::ModLoadingPlugin;
 use bevy::app::{App, First, Plugin};
-use bevy::asset::{Handle, LoadedFolder};
-use bevy::prelude::{AppExtStates, Message, Resource, States, SystemSet};
+use bevy::prelude::{AppExtStates as _, Message, Resource, States, SystemSet};
 use bevy::state::state::FreelyMutableState;
 use registry::registry::reflect_registry::ReflectRegistry;
 use rootcause::Report;
@@ -22,7 +21,6 @@ impl Plugin for ModPlugin {
 #[derive(Debug, Resource)]
 pub struct ModData {
     pub registry: ReflectRegistry,
-    pub folder_handles: Vec<(String, Handle<LoadedFolder>)>,
     // pub assets: FxBiHashMap<Utf8PathBuf, RegistryId>,
 }
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]

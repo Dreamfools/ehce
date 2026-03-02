@@ -1,5 +1,5 @@
-use crate::controllers::{ShipControllerModel, TankControllerModel};
-use crate::sprite::{SpriteId, SpriteModel};
+use crate::controllers::TankControllerModel;
+use crate::sprite::SpriteId;
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

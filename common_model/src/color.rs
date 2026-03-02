@@ -1,4 +1,4 @@
-use bevy_color::ColorToPacked;
+use bevy_color::ColorToPacked as _;
 use bevy_reflect::Reflect;
 use float_ord::FloatOrd;
 use schemars::JsonSchema;
