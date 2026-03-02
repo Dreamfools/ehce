@@ -1,11 +1,10 @@
-use std::path::PathBuf;
+use crate::loading::ModLoadingPlugin;
 use bevy::app::{App, First, Plugin};
 use bevy::asset::{Handle, LoadedFolder};
 use bevy::prelude::{AppExtStates, Message, Resource, States, SystemSet};
 use bevy::state::state::FreelyMutableState;
-use registry::registry::id::{IdRef, RawId};
 use registry::registry::reflect_registry::ReflectRegistry;
-use crate::loading::ModLoadingPlugin;
+use rootcause::Report;
 
 #[derive(Debug)]
 pub struct ModPlugin;
@@ -22,10 +21,8 @@ impl Plugin for ModPlugin {
 }
 #[derive(Debug, Resource)]
 pub struct ModData {
-    pub name: String,
     pub registry: ReflectRegistry,
-    pub mod_path: PathBuf,
-    pub folder_handle: Handle<LoadedFolder>,
+    pub folder_handles: Vec<(String, Handle<LoadedFolder>)>,
     // pub assets: FxBiHashMap<Utf8PathBuf, RegistryId>,
 }
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
@@ -50,7 +47,7 @@ impl FreelyMutableState for ModState {}
 ///
 /// Should generally be only raised by app code, but not listened to
 #[derive(Debug, Message)]
-pub struct WantLoadModMessage(pub String);
+pub struct WantLoadModMessage;
 
 /// Message that is triggered when mod loading fails for any reason
 ///
@@ -59,7 +56,7 @@ pub struct WantLoadModMessage(pub String);
 /// Errors are logged via error!, so use custom tracing frontend to report
 /// errors to the user
 #[derive(Debug, Message)]
-pub struct ModLoadErrorMessage(pub String);
+pub struct ModLoadErrorMessage(pub Report);
 
 /// Message that is triggered when mod is loaded successfully
 ///
@@ -69,10 +66,6 @@ pub struct ModLoadErrorMessage(pub String);
 /// Payload is a full mod data
 #[derive(Debug, Message)]
 pub struct ModLoadedMessage(pub ModData);
-
-/// Message that is triggered when hot reload happens
-#[derive(Debug, Message)]
-pub struct ModHotReloadMessage;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct HotReloading;

@@ -22,10 +22,17 @@ mod state;
 mod combat;
 mod ecs_tools;
 
+use crate::combat::controller::ShipControllerPlugin;
+use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
+use crate::combat::controller::inputs::ControllerInputs;
+use crate::combat::controller::tank_controller::PhysicsTankController;
 use crate::loading::json5_asset_plugin::Json5AssetPlugin;
 use crate::loading::{DatabaseAsset, load_last_mod};
+use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use crate::state::GameState;
-use avian2d::{prelude::*};
+use avian2d::prelude::*;
+use bevy::camera::ScalingMode;
+use bevy::camera::primitives::Frustum;
 use bevy::{
     color::palettes::{
         css::WHITE,
@@ -34,16 +41,9 @@ use bevy::{
     input::common_conditions::input_pressed,
     prelude::*,
 };
-use bevy::camera::primitives::Frustum;
-use bevy::camera::ScalingMode;
 use inline_tweak::tweak;
 use model::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
-use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
-use crate::combat::controller::inputs::ControllerInputs;
-use crate::combat::controller::ShipControllerPlugin;
-use crate::combat::controller::tank_controller::PhysicsTankController;
-use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 
 fn main() {
     let mut app = App::new();
@@ -53,14 +53,16 @@ fn main() {
     app.add_plugins((
         DefaultPlugins.set(AssetPlugin {
             mode: AssetMode::Unprocessed,
-            file_path: "mods".to_string(),
+            file_path: loading::MOD_FOLDER.to_owned(),
             processed_file_path: "tmp".to_string(),
             ..Default::default()
         }),
         Json5AssetPlugin::<DatabaseAsset>::new(&["json", "json5"]),
         ModPlugin,
         ShipControllerPlugin,
-        PhysicsPlugins::default().with_length_unit(1.0).set(PhysicsInterpolationPlugin::interpolate_all()),
+        PhysicsPlugins::default()
+            .with_length_unit(1.0)
+            .set(PhysicsInterpolationPlugin::interpolate_all()),
     ));
 
     app.insert_state(GameState::default());
@@ -70,12 +72,12 @@ fn main() {
     app.insert_resource(Gravity(Vec2::ZERO));
 
     app.add_systems(OnEnter(GameState::Init), load_last_mod)
+        .add_systems(PostUpdate, (init_tick).run_if(in_state(GameState::Init)))
         .add_systems(
-            PostUpdate,
-            (init_tick).run_if(in_state(GameState::Init)),
-            
+            OnEnter(GameState::Gameplay),
+            (setup_scene, setup_ships, setup_text),
         )
-        .add_systems(OnEnter(GameState::Gameplay), (setup_scene, setup_ships, setup_text));
+        .add_systems(Update, handle_mod_loaded_error_message);
 
     // Setup the scene and UI, and update text in `Update`.
     app.add_systems(
@@ -120,16 +122,20 @@ fn init_tick(
 #[derive(Component)]
 struct Ball;
 
-fn setup_scene(
-    mut commands: Commands,
-) {
+fn setup_scene(mut commands: Commands) {
     // Spawn a camera.
-    commands.spawn((Camera2d, Projection::Orthographic(OrthographicProjection{
-        near: -1e9,
-        far: 1e9,
-        scaling_mode: ScalingMode::AutoMax { max_width: 64.0, max_height: 64.0 },
-        ..OrthographicProjection::default_2d()
-    })));
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            near: -1e9,
+            far: 1e9,
+            scaling_mode: ScalingMode::AutoMax {
+                max_width: 64.0,
+                max_height: 64.0,
+            },
+            ..OrthographicProjection::default_2d()
+        }),
+    ));
 }
 
 fn setup_ships(
@@ -140,7 +146,6 @@ fn setup_ships(
 ) {
     let scout = &mod_data.registry[IdRef::<SpaceshipModel>::new(RawId::new("scout"))];
     let circle = Circle::new(30.0);
-
 
     let mut sprite = Sprite::from_image(mod_data.registry[scout.sprite].clone());
     sprite.custom_size = Some(Vec2::splat(1.0));
@@ -274,6 +279,12 @@ fn update_timestep_text(
 fn move_balls(mut query: Query<&mut Transform, With<Ball>>) {
     for mut transform in &mut query {
         transform.translation.x += tweak!(1.0);
+    }
+}
+
+fn handle_mod_loaded_error_message(mut errs: MessageReader<ModLoadErrorMessage>) {
+    for msg in errs.read() {
+        error!("Something gone wrong.\n{:?}", msg)
     }
 }
 

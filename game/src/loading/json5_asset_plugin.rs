@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
 use bevy::app::{App, Plugin};
-use bevy::asset::{Asset, AssetApp, AssetLoader, LoadContext};
 use bevy::asset::io::Reader;
+use bevy::asset::{Asset, AssetApp, AssetLoader, LoadContext};
 use bevy::reflect::TypePath;
+use std::marker::PhantomData;
 use thiserror::Error;
 
 pub struct Json5AssetPlugin<A> {
@@ -12,7 +12,7 @@ pub struct Json5AssetPlugin<A> {
 
 impl<A> Plugin for Json5AssetPlugin<A>
 where
-        for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: serde::Deserialize<'de> + Asset,
 {
     fn build(&self, app: &mut App) {
         app.init_asset::<A>()
@@ -25,7 +25,7 @@ where
 
 impl<A> Json5AssetPlugin<A>
 where
-        for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: serde::Deserialize<'de> + Asset,
 {
     /// Create a new plugin that will load assets from files with the given extensions.
     pub fn new(extensions: &[&'static str]) -> Self {
@@ -57,7 +57,7 @@ pub enum Json5LoaderError {
 
 impl<A> AssetLoader for Json5AssetLoader<A>
 where
-        for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: serde::Deserialize<'de> + Asset,
 {
     type Asset = A;
     type Settings = ();

@@ -1,9 +1,9 @@
-use std::fmt::Debug;
-use std::marker::PhantomData;
 use bevy::app::{App, Plugin};
 use bevy::log::error;
 use bevy::prelude::{Commands, OnEnter, OnExit, Res, Resource, State, States};
 use bevy::state::state::FreelyMutableState;
+use std::fmt::Debug;
+use std::marker::PhantomData;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
 pub enum GameState {
@@ -18,7 +18,6 @@ pub enum GameState {
 
 impl States for GameState {}
 impl FreelyMutableState for GameState {}
-
 
 /// Simple plugin to assert the presence of a resource when entering a state
 /// and remove it when exiting the state.
@@ -37,7 +36,10 @@ impl<S: States + Clone, T: Resource> Plugin for SimpleStateObjectPlugin<S, T> {
     }
 }
 
-pub fn assert_state_object<S: States + Debug, T: Resource>(res: Option<Res<T>>, state: Res<State<S>>) {
+pub fn assert_state_object<S: States + Debug, T: Resource>(
+    res: Option<Res<T>>,
+    state: Res<State<S>>,
+) {
     if res.is_none() {
         error!(
             ?state,

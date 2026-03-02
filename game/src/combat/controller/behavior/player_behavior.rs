@@ -37,12 +37,30 @@ pub fn update_player_behavior(
                 };
             }
             PlayerBehavior::Directional => {
-                let up = if keyboard_input.pressed(KeyCode::KeyW) { 1.0 } else { 0.0 };
-                let down = if keyboard_input.pressed(KeyCode::KeyS) { -1.0 } else { 0.0 };
-                let left = if keyboard_input.pressed(KeyCode::KeyA) { -1.0 } else { 0.0 };
-                let right = if keyboard_input.pressed(KeyCode::KeyD) { 1.0 } else { 0.0 };
+                let up = if keyboard_input.pressed(KeyCode::KeyW) {
+                    1.0
+                } else {
+                    0.0
+                };
+                let down = if keyboard_input.pressed(KeyCode::KeyS) {
+                    -1.0
+                } else {
+                    0.0
+                };
+                let left = if keyboard_input.pressed(KeyCode::KeyA) {
+                    -1.0
+                } else {
+                    0.0
+                };
+                let right = if keyboard_input.pressed(KeyCode::KeyD) {
+                    1.0
+                } else {
+                    0.0
+                };
                 input.direction = Vec2::new(left + right, up + down).normalize_or_zero();
-                input.throttle = (input.direction != Vec2::ZERO).then_some(1.0).unwrap_or(0.0);
+                input.throttle = (input.direction != Vec2::ZERO)
+                    .then_some(1.0)
+                    .unwrap_or(0.0);
             }
         }
     }
