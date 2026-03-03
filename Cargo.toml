@@ -105,9 +105,7 @@ opt-level = 3
 debug-assertions = false
 
 [profile.release]
-# Compile the entire crate as one unit.
-# Slows compile times, marginal improvements.
-codegen-units = 1
+codegen-units = 4
 # Do a second optimization pass over the entire program, including dependencies.
 # Slows compile times, marginal improvements.
 lto = "thin"
