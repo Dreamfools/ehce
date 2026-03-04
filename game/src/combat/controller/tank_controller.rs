@@ -1,6 +1,6 @@
 use crate::combat::controller::inputs::ControllerInputs;
 use crate::ecs_tools::component_invariants;
-use avian2d::prelude::{AngularDamping, AngularVelocity, ComputedMass, LinearVelocity, RigidBody};
+use avian2d::prelude::{AngularDamping, AngularVelocity, ComputedAngularInertia, ComputedMass, LinearVelocity, RigidBody};
 use bevy::math::Vec2;
 use bevy::prelude::{Component, Query, Reflect, Res, Transform};
 use bevy::time::{Fixed, Time};
@@ -38,6 +38,7 @@ pub fn tank_controller_update(
         &ControllerInputs,
         &PhysicsTankController,
         &ComputedMass,
+        &ComputedAngularInertia,
         &RigidBody,
         &mut LinearVelocity,
         &mut AngularVelocity,
@@ -50,17 +51,18 @@ pub fn tank_controller_update(
         inputs,
         controller,
         mass,
+        angular_inertia,
         rb,
         mut linear_velocity,
         mut angular_velocity,
         angular_damping,
     ) in q
     {
-        if rb.is_static() || !mass.inverse().is_finite() {
+        if rb.is_static() {
             continue;
         }
 
-        let torgue = controller.turn_torgue * mass.inverse();
+        let torgue = controller.turn_torgue * angular_inertia.inverse() * 1000.0;
 
         let ship_direction = transform.right().truncate();
 
