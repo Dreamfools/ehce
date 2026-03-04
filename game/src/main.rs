@@ -24,10 +24,6 @@ mod state;
 mod combat;
 mod ecs_tools;
 
-use crate::combat::controller::ShipControllerPlugin;
-use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
-use crate::combat::controller::inputs::ControllerInputs;
-use crate::combat::controller::tank_controller::PhysicsTankController;
 use crate::loading::json5_asset_plugin::Json5AssetPlugin;
 use crate::loading::{DatabaseAsset, load_last_mod};
 use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
@@ -45,6 +41,10 @@ use bevy::{
 use inline_tweak::tweak;
 use model::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
+use crate::combat::CombatPlugin;
+use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
+use crate::combat::controller::inputs::ControllerInputs;
+use crate::combat::controller::tank_controller::PhysicsTankController;
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -60,10 +60,7 @@ fn main() -> AppExit {
         }),
         Json5AssetPlugin::<DatabaseAsset>::new(&["json", "json5"]),
         ModPlugin,
-        ShipControllerPlugin,
-        PhysicsPlugins::default()
-            .with_length_unit(1.0)
-            .set(PhysicsInterpolationPlugin::interpolate_all()),
+        CombatPlugin,
     ));
 
     app.insert_state(GameState::default());
