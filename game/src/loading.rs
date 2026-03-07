@@ -16,19 +16,22 @@ use bevy::prelude::{
     Query, Res, ResMut, Resource, in_state,
 };
 use bevy::reflect::Reflect;
+use bevy::tasks::{Task, futures};
 use bevy::time::{Time, Timer, TimerMode};
 use bevy::window::Window;
+use bevy_asset::AssetApp as _;
+use bevy_asset::io::{AssetReaderError, AssetSourceBuilder, AssetSourceId};
+use mod_asset_source::{MODS_FOLDER, ModsAssetReader, embedded_assets};
 use model::ModModel;
 use registry::path::FieldPath;
 use registry::registry::id::RawId;
 use registry::registry::reflect_registry::BuildReflectRegistry;
 use rootcause::prelude::ResultExt as _;
 use rootcause::report_collection::ReportCollection;
-use rootcause::{IntoReport as _, bail, report};
+use rootcause::{IntoReport as _, bail};
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
-use std::env;
-use std::ops::DerefMut as _;
+use std::ops::{Deref as _, DerefMut as _};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use utils::map::{HashMap, HashSet};
@@ -36,33 +39,31 @@ use utils::rootcause_ext::AttachField;
 
 pub mod json5_asset_plugin;
 
-pub static MOD_FOLDER: LazyLock<&'static str> = LazyLock::new(|| {
-    if let Ok(mods_dir) = env::var("EHCE_MODS_DIR") {
-        return Box::leak(mods_dir.into_boxed_str());
-    }
-    let base_path = bevy::asset::io::file::FileAssetReader::get_base_path();
-    let mods_path = base_path.join("mods");
-    Box::leak(
-        mods_path
-            .to_str()
-            .unwrap_or_else(|| panic!("Base path is not valid UTF-8"))
-            .to_string()
-            .into_boxed_str(),
-    )
+pub static ASSET_READER: LazyLock<ModsAssetReader> = LazyLock::new(|| {
+    let ab = ModsAssetReader::new();
+    ab.add_embedded(
+        "base".to_string(),
+        embedded_assets!(
+            "game/mods",
+            include_dir::include_dir!("$CARGO_MANIFEST_DIR/mods")
+        ),
+    );
+    ab.add_filesystem("mods".into());
+    ab
 });
 
-pub fn load_last_mod(mut evt: MessageWriter<WantLoadModMessage>) {
-    let schema = schemars::schema_for!(ModModel);
-    let json_str = serde_json::to_string_pretty(&schema).expect("Schema is serializable");
-    let mods_path = PathBuf::from(*MOD_FOLDER);
-    fs_err::create_dir_all(&mods_path).unwrap();
-    fs_err::write(mods_path.join("$schema.json"), json_str).unwrap();
-    evt.write(WantLoadModMessage);
+#[derive(Debug)]
+pub struct CustomAssetReaderPlugin;
+
+impl Plugin for CustomAssetReaderPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_asset_source(
+            AssetSourceId::Default,
+            AssetSourceBuilder::new(|| Box::new(ASSET_READER.deref())),
+        );
+    }
 }
 
-#[derive(Debug, Deserialize, Serialize, Asset, Reflect)]
-#[serde(transparent)]
-pub struct DatabaseAsset(pub ModModel);
 #[derive(Debug)]
 pub struct ModLoadingPlugin;
 
@@ -88,6 +89,21 @@ impl Plugin for ModLoadingPlugin {
     }
 }
 
+pub fn load_last_mod(mut evt: MessageWriter<WantLoadModMessage>) {
+    if cfg!(not(target_arch = "wasm32")) {
+        let schema = schemars::schema_for!(ModModel);
+        let json_str = serde_json::to_string_pretty(&schema).expect("Schema is serializable");
+        let mods_path = PathBuf::from(*MODS_FOLDER);
+        fs_err::create_dir_all(&mods_path).unwrap();
+        fs_err::write(mods_path.join("$schema.json"), json_str).unwrap();
+    }
+    evt.write(WantLoadModMessage);
+}
+
+#[derive(Debug, Deserialize, Serialize, Asset, Reflect)]
+#[serde(transparent)]
+pub struct DatabaseAsset(pub ModModel);
+
 #[derive(Debug, Default, Reflect, Resource)]
 struct LoadingStateData {
     folder_handles: Vec<(String, Handle<LoadedFolder>)>,
@@ -102,15 +118,30 @@ fn loading_initializer(
     asset_server: Res<AssetServer>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<ModState>>,
+    mut task: Local<Option<Task<Result<Vec<String>, AssetReaderError>>>>,
 ) {
-    let Some(_) = evt.read().last() else {
-        return;
+    let pool = bevy::tasks::IoTaskPool::get();
+    if task.is_none() {
+        let Some(_) = evt.read().last() else {
+            return;
+        };
+
+        let new_task = pool.spawn(ASSET_READER.list_mod_names());
+        *task = Some(new_task);
+    }
+    let Some(task_handle) = task.as_mut() else {
+        panic!("Task should have been initialized if we got a load mod event");
     };
 
-    let mods = match available_mods() {
+    let Some(result) = futures::check_ready(task_handle) else {
+        return;
+    };
+    *task = None;
+
+    let mods = match result {
         Ok(mods) => mods,
         Err(err) => {
-            err_evt.write(ModLoadErrorMessage(err));
+            err_evt.write(ModLoadErrorMessage(err.into_report().into()));
             return;
         }
     };
@@ -150,13 +181,9 @@ fn is_folder_loaded(
         return Ok(false);
     };
 
-    let handles = not_ready_handles.entry(handle.clone()).or_insert_with(|| {
-        folder
-            .handles
-            .iter()
-            .map(bevy_asset::UntypedHandle::id)
-            .collect()
-    });
+    let handles = not_ready_handles
+        .entry(handle.clone())
+        .or_insert_with(|| folder.handles.iter().map(UntypedHandle::id).collect());
 
     let mut rg = ReportCollection::new();
 
@@ -308,31 +335,31 @@ fn loader(
     }
 }
 
-pub fn available_mods() -> rootcause::Result<impl IntoIterator<Item = String>> {
-    let mut dirs = vec![];
-    for entry in fs_err::read_dir(*MOD_FOLDER)? {
-        let entry = entry?;
-        let meta = entry
-            .metadata()
-            .context("Failed to read mod folder entry metadata")
-            .attach_with(|| AttachField("Path", entry.path().to_string_lossy().to_string()))?;
-
-        if meta.is_dir() {
-            dirs.push(
-                entry
-                    .file_name()
-                    .to_str()
-                    .ok_or_else(|| report!("Mod folder entry name is not valid UTF-8"))
-                    .attach_with(|| {
-                        AttachField("Path", entry.path().to_string_lossy().to_string())
-                    })?
-                    .to_string(),
-            );
-        }
-    }
-
-    Ok(dirs)
-}
+// pub fn available_mods() -> rootcause::Result<impl IntoIterator<Item = String>> {
+//     let mut dirs = vec![];
+//     for entry in fs_err::read_dir(*MODS_FOLDER)? {
+//         let entry = entry?;
+//         let meta = entry
+//             .metadata()
+//             .context("Failed to read mod folder entry metadata")
+//             .attach_with(|| AttachField("Path", entry.path().to_string_lossy().to_string()))?;
+//
+//         if meta.is_dir() {
+//             dirs.push(
+//                 entry
+//                     .file_name()
+//                     .to_str()
+//                     .ok_or_else(|| report!("Mod folder entry name is not valid UTF-8"))
+//                     .attach_with(|| {
+//                         AttachField("Path", entry.path().to_string_lossy().to_string())
+//                     })?
+//                     .to_string(),
+//             );
+//         }
+//     }
+//
+//     Ok(dirs)
+// }
 
 fn asset_path(asset_server: &AssetServer, handle: &UntypedHandle) -> Option<PathBuf> {
     let Some(path) = asset_server.get_path(handle.id()) else {
@@ -440,7 +467,7 @@ fn construct_mod<'a, 'path>(
             .attach_with(|| AttachField("Path", path_lossy))?;
     }
 
-    let registry = reg.build()?;
+    let registry = reg.build().into_report()?;
 
     Ok(ModData { registry })
 }

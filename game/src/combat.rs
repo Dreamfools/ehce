@@ -1,4 +1,4 @@
-use bevy::app::{App, PluginGroup};
+use bevy::app::{App, PluginGroup as _};
 use bevy::prelude::Plugin;
 
 pub mod controller;

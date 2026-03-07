@@ -1,0 +1,21 @@
+[package]
+name = "mod_asset_source"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy_asset = { workspace = true, default-features = false, features = ["web_asset_cache"] }
+bevy_tasks ={ workspace = true, default-features = false }
+async-fs = { workspace = true }
+web-fs = { workspace = true }
+include_dir = { workspace = true }
+rootcause = { workspace = true }
+fs-err = { workspace = true }
+utils = { workspace = true }
+parking_lot = { workspace = true }
+futures-core = { workspace = true }
+globset = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

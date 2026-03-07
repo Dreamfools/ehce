@@ -3,7 +3,7 @@ use bevy::app::{App, First, Plugin};
 use bevy::prelude::{AppExtStates as _, Message, Reflect, Resource, States, SystemSet};
 use bevy::state::state::FreelyMutableState;
 use registry::registry::reflect_registry::ReflectRegistry;
-use rootcause::{Report, report};
+use rootcause::Report;
 
 #[derive(Debug)]
 pub struct ModPlugin;
@@ -53,8 +53,9 @@ pub struct WantLoadModMessage;
 ///
 /// Errors are logged via error!, so use custom tracing frontend to report
 /// errors to the user
-#[derive(Debug, Reflect, Message)]
-pub struct ModLoadErrorMessage(#[reflect(ignore, default = "default_report")] pub Report);
+#[derive(Debug, Message)]
+#[cfg_attr(bevy_lint, allow(bevy::missing_reflect))]
+pub struct ModLoadErrorMessage(pub Report);
 
 /// Message that is triggered when mod is loaded successfully
 ///
@@ -67,9 +68,3 @@ pub struct ModLoadedMessage(pub ModData);
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub struct HotReloadingSystems;
-
-fn default_report() -> Report {
-    report!(
-        "<REFLECTION DEFAULT> ModLoadErrorMessage was created without a report, this is likely a bug in the code that creates this message"
-    )
-}

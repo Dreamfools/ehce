@@ -24,8 +24,12 @@ mod state;
 mod combat;
 mod ecs_tools;
 
+use crate::combat::CombatPlugin;
+use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
+use crate::combat::controller::inputs::ControllerInputs;
+use crate::combat::controller::tank_controller::PhysicsTankController;
 use crate::loading::json5_asset_plugin::Json5AssetPlugin;
-use crate::loading::{DatabaseAsset, load_last_mod};
+use crate::loading::{CustomAssetReaderPlugin, DatabaseAsset, load_last_mod};
 use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use crate::state::GameState;
 use avian2d::prelude::*;
@@ -39,12 +43,9 @@ use bevy::{
     prelude::*,
 };
 use inline_tweak::tweak;
+use mod_asset_source::MODS_FOLDER;
 use model::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
-use crate::combat::CombatPlugin;
-use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
-use crate::combat::controller::inputs::ControllerInputs;
-use crate::combat::controller::tank_controller::PhysicsTankController;
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -52,9 +53,10 @@ fn main() -> AppExit {
     // Interpolation and extrapolation functionality is enabled by the `PhysicsInterpolationPlugin`.
     // It is included in the `PhysicsPlugins` by default.
     app.add_plugins((
+        CustomAssetReaderPlugin,
         DefaultPlugins.set(AssetPlugin {
             mode: AssetMode::Unprocessed,
-            file_path: loading::MOD_FOLDER.to_owned(),
+            file_path: MODS_FOLDER.to_owned(),
             processed_file_path: "tmp".to_string(),
             ..Default::default()
         }),
@@ -278,8 +280,4 @@ fn handle_mod_loaded_error_message(mut errs: MessageReader<ModLoadErrorMessage>)
     for msg in errs.read() {
         error!("Something gone wrong.\n{:?}", msg.0);
     }
-}
-
-pub fn report_error(err: impl Into<rootcause::Report>) {
-    error!("Something gone wrong.\n{:?}", err.into());
 }
