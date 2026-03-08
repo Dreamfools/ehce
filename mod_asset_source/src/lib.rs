@@ -1,4 +1,4 @@
-use bevy_asset::AsyncReadExt;
+use bevy_asset::AsyncReadExt as _;
 use bevy_asset::io::{AssetReader, AssetReaderError, PathStream, Reader};
 use bevy_tasks::futures_lite::StreamExt as _;
 use ignore::gitignore::Gitignore;
@@ -77,7 +77,6 @@ impl ModsAssetReader {
                 self.systems.lock().push(Arc::new(ModFs {
                     driver: Arc::new(FsDriver::Embedded { dir }),
                     ignore: Arc::new(Gitignore::empty()),
-                    prefix: Default::default(),
                     name,
                 }));
             }
@@ -120,7 +119,6 @@ impl ModsAssetReader {
             name: root.to_string_lossy().to_string(),
             driver: Arc::new(FsDriver::FileSystem { root }),
             ignore: Arc::new(Gitignore::empty()),
-            prefix: Default::default(),
         }));
 
         self.mark_dirty();
@@ -340,7 +338,6 @@ macro_rules! embedded_assets {
 struct ModFs {
     driver: Arc<FsDriver>,
     ignore: Arc<Gitignore>,
-    prefix: PathBuf,
     name: String,
 }
 
@@ -357,7 +354,6 @@ impl ModFs {
                 for dir in dir.dirs() {
                     let name = utf8_file_name(dir.path())?;
                     mods.push(ModFs {
-                        prefix: PathBuf::from(&name),
                         name,
                         driver: self.driver.clone(),
                         ignore: self.ignore.clone(),
@@ -373,7 +369,6 @@ impl ModFs {
                     if entry.file_type().await?.is_dir() {
                         let name = utf8_file_name(&entry.path())?;
                         mods.push(ModFs {
-                            prefix: PathBuf::from(&name),
                             name,
                             driver: self.driver.clone(),
                             ignore: self.ignore.clone(),
@@ -413,9 +408,11 @@ impl ModFs {
                             mod_fs.name, err
                         ))
                     })?;
-                    mod_fs.ignore = Arc::new(ignore)
+                    mod_fs.ignore = Arc::new(ignore);
                 }
-                Err(AssetReaderError::NotFound(_)) => continue,
+                Err(AssetReaderError::NotFound(_)) => {
+                    // No .modignore file, just use an empty ignore matcher
+                },
                 Err(err) => {
                     return Err(custom_error(format!(
                         "Failed to read .modignore for mod {}: {}",

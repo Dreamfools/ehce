@@ -17,8 +17,6 @@
 //! the next positions based on velocity. This makes movement feel much more responsive, but can cause
 //! jumpy results when the prediction is wrong, such as when the velocity of an object is suddenly altered.
 
-mod loading;
-mod mods;
 mod state;
 
 mod combat;
@@ -28,9 +26,6 @@ use crate::combat::CombatPlugin;
 use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
 use crate::combat::controller::inputs::ControllerInputs;
 use crate::combat::controller::tank_controller::PhysicsTankController;
-use crate::loading::json5_asset_plugin::Json5AssetPlugin;
-use crate::loading::{CustomAssetReaderPlugin, DatabaseAsset, load_last_mod};
-use crate::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use crate::state::GameState;
 use avian2d::prelude::*;
 use bevy::camera::ScalingMode;
@@ -44,6 +39,9 @@ use bevy::{
 };
 use inline_tweak::tweak;
 use mod_asset_source::MODS_FOLDER;
+use mod_loading::json5_asset_plugin::Json5AssetPlugin;
+use mod_loading::loading::{load_last_mod, CustomAssetReaderPlugin, DatabaseAsset};
+use mod_loading::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use model::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
 

@@ -1,0 +1,23 @@
+[package]
+name = "mod_loading"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true, default-features = false, features = ["bevy_log", "bevy_image", "bevy_asset", "bevy_state", "bevy_window"] }
+mod_asset_source = { workspace = true }
+model = { workspace = true }
+registry = { workspace = true }
+rootcause = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+utils = { workspace = true }
+bevy_asset = { workspace = true, default-features = false }
+thiserror = { workspace = true }
+schemars = { workspace = true }
+serde_json = { workspace = true }
+fs-err = { workspace = true }
+bevy_utils = { workspace = true }
+serde_json5 = { workspace = true }
+
+[lints]
+workspace = true

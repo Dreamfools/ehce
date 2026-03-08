@@ -1,8 +1,7 @@
 use crate::{FsDriver, KNOWN_EXTENSIONS, ModFs, ignore_matches, normalize_with_parent};
 use async_fs::{ReadDir, read_dir};
 use bevy_asset::io::AssetReaderError;
-use bevy_tasks::futures_lite::FutureExt;
-use bevy_tasks::{ComputeTaskPool, IoTaskPool, Task};
+use bevy_tasks::futures_lite::FutureExt as _;
 use futures_core::Stream as _;
 use ignore::gitignore;
 use include_dir::DirEntry;
@@ -126,12 +125,11 @@ impl ModFsDirStreamKind {
                 read_dir,
                 cur_task,
             } => {
-                if let Some(fut) = cur_task {
-                    if let Poll::Ready(res) = fut.poll(cx) {
+                if let Some(fut) = cur_task
+                    && let Poll::Ready(res) = fut.poll(cx) {
                         *cur_task = None;
                         return Poll::Ready(res);
                     }
-                }
                 match Pin::new(read_dir).poll_next(cx) {
                     Poll::Ready(Some(Ok(entry))) => {
                         let path = match entry.path().strip_prefix(root) {

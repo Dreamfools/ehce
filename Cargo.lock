@@ -401,7 +401,7 @@ dependencies = [
  "bevy_reflect",
  "bevy_time",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "blake3",
  "derive_more",
  "downcast-rs 2.0.2",
@@ -445,7 +445,7 @@ dependencies = [
  "bevy_reflect",
  "bevy_render",
  "bevy_shader",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "tracing",
 ]
 
@@ -460,7 +460,7 @@ dependencies = [
  "bevy_platform",
  "bevy_reflect",
  "bevy_tasks",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "cfg-if",
  "console_error_panic_hook",
  "ctrlc",
@@ -491,7 +491,7 @@ dependencies = [
  "bevy_platform",
  "bevy_reflect",
  "bevy_tasks",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bitflags 2.10.0",
  "blake3",
  "crossbeam-channel",
@@ -561,7 +561,7 @@ dependencies = [
  "bevy_mesh",
  "bevy_reflect",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bevy_window",
  "derive_more",
  "downcast-rs 2.0.2",
@@ -607,7 +607,7 @@ dependencies = [
  "bevy_render",
  "bevy_shader",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bevy_window",
  "bitflags 2.10.0",
  "nonmax",
@@ -687,7 +687,7 @@ dependencies = [
  "bevy_ptr",
  "bevy_reflect",
  "bevy_tasks",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bitflags 2.10.0",
  "bumpalo",
  "concurrent-queue",
@@ -757,7 +757,7 @@ dependencies = [
  "bevy_reflect",
  "bevy_time",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
 ]
 
 [[package]]
@@ -790,7 +790,7 @@ dependencies = [
  "bevy_shader",
  "bevy_sprite_render",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bytemuck",
  "tracing",
 ]
@@ -819,7 +819,7 @@ dependencies = [
  "bevy_math",
  "bevy_platform",
  "bevy_reflect",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bitflags 2.10.0",
  "bytemuck",
  "futures-lite",
@@ -914,7 +914,7 @@ dependencies = [
  "bevy_transform",
  "bevy_ui",
  "bevy_ui_render",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bevy_window",
  "bevy_winit",
 ]
@@ -936,7 +936,7 @@ dependencies = [
  "bevy_platform",
  "bevy_reflect",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "tracing",
 ]
 
@@ -950,7 +950,7 @@ dependencies = [
  "bevy_app",
  "bevy_ecs",
  "bevy_platform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "tracing",
  "tracing-log",
  "tracing-oslog",
@@ -1045,7 +1045,7 @@ dependencies = [
  "bevy_render",
  "bevy_shader",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bitflags 2.10.0",
  "bytemuck",
  "derive_more",
@@ -1122,7 +1122,7 @@ dependencies = [
  "bevy_render",
  "bevy_shader",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bevy_window",
  "bitflags 2.10.0",
  "nonmax",
@@ -1148,7 +1148,7 @@ dependencies = [
  "bevy_platform",
  "bevy_ptr",
  "bevy_reflect_derive",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "derive_more",
  "disqualified",
  "downcast-rs 2.0.2",
@@ -1206,7 +1206,7 @@ dependencies = [
  "bevy_tasks",
  "bevy_time",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bevy_window",
  "bitflags 2.10.0",
  "bytemuck",
@@ -1257,7 +1257,7 @@ dependencies = [
  "bevy_platform",
  "bevy_reflect",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "derive_more",
  "ron",
  "serde",
@@ -1330,7 +1330,7 @@ dependencies = [
  "bevy_sprite",
  "bevy_text",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bitflags 2.10.0",
  "bytemuck",
  "derive_more",
@@ -1350,7 +1350,7 @@ dependencies = [
  "bevy_platform",
  "bevy_reflect",
  "bevy_state_macros",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "log",
  "variadics_please",
 ]
@@ -1401,7 +1401,7 @@ dependencies = [
  "bevy_math",
  "bevy_platform",
  "bevy_reflect",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "cosmic-text",
  "serde",
  "smallvec",
@@ -1438,7 +1438,7 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "bevy_tasks",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "derive_more",
  "serde",
  "thiserror 2.0.18",
@@ -1477,7 +1477,7 @@ dependencies = [
  "bevy_sprite",
  "bevy_text",
  "bevy_transform",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bevy_window",
  "derive_more",
  "smallvec",
@@ -1512,10 +1512,17 @@ dependencies = [
  "bevy_text",
  "bevy_transform",
  "bevy_ui",
- "bevy_utils",
+ "bevy_utils 0.18.0",
  "bytemuck",
  "derive_more",
  "tracing",
+]
+
+[[package]]
+name = "bevy_utils"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -2665,6 +2672,7 @@ dependencies = [
  "include_dir",
  "inline_tweak",
  "mod_asset_source",
+ "mod_loading",
  "model",
  "registry",
  "rootcause",
@@ -3581,6 +3589,26 @@ dependencies = [
  "tracing",
  "utils",
  "web-fs",
+]
+
+[[package]]
+name = "mod_loading"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_asset",
+ "bevy_utils 0.1.0",
+ "fs-err",
+ "mod_asset_source",
+ "model",
+ "registry",
+ "rootcause",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_json5",
+ "thiserror 2.0.18",
+ "utils",
 ]
 
 [[package]]

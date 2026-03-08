@@ -1,0 +1,10 @@
+[package]
+name = "bevy_utils"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true, default-features = false, features = ["bevy_log", "bevy_state"] }
+
+[lints]
+workspace = true

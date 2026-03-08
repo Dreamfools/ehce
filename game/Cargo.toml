@@ -20,6 +20,7 @@ fs-err = { workspace = true }
 bevy_asset = { workspace = true }
 mod_asset_source = { workspace = true }
 include_dir = { workspace = true }
+mod_loading = { workspace = true }
 
 [target.wasm32-unknown-unknown.dependencies]
 getrandom = { workspace = true, features = ["wasm_js"] }

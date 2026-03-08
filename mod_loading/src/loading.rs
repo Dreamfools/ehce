@@ -1,43 +1,28 @@
-use crate::mods::{
-    HotReloadingSystems, ModData, ModLoadErrorMessage, ModLoadedMessage, ModState,
-    WantLoadModMessage,
-};
-use crate::state::SimpleStateObjectPlugin;
-use bevy::app::{App, First, Plugin, Update};
-use bevy::asset::{
-    Asset, AssetEvent, AssetServer, Assets, Handle, LoadState, LoadedFolder, UntypedAssetId,
-    UntypedHandle,
-};
-use bevy::diagnostic::FrameCount;
-use bevy::image::Image;
-use bevy::log::{error, info};
-use bevy::prelude::{
-    Commands, IntoScheduleConfigs as _, Local, MessageReader, MessageWriter, Messages, NextState,
-    Query, Res, ResMut, Resource, in_state,
-};
-use bevy::reflect::Reflect;
-use bevy::tasks::{Task, futures};
-use bevy::time::{Time, Timer, TimerMode};
-use bevy::window::Window;
-use bevy_asset::AssetApp as _;
-use bevy_asset::io::{AssetReaderError, AssetSourceBuilder, AssetSourceId};
-use mod_asset_source::{MODS_FOLDER, ModsAssetReader, embedded_assets};
-use model::ModModel;
-use registry::path::FieldPath;
-use registry::registry::id::RawId;
-use registry::registry::reflect_registry::BuildReflectRegistry;
-use rootcause::prelude::ResultExt as _;
-use rootcause::report_collection::ReportCollection;
-use rootcause::{IntoReport as _, bail};
-use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 use std::ops::{Deref as _, DerefMut as _};
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
+use bevy::app::{App, First, Plugin, Update};
+use bevy::diagnostic::FrameCount;
+use bevy::image::Image;
+use bevy::log::{error, info};
+use bevy::prelude::{in_state, Asset, Commands, IntoScheduleConfigs as _, Local, MessageReader, MessageWriter, Messages, NextState, Query, Reflect, Res, ResMut, Resource, Time, Timer, TimerMode, Window};
+use bevy::tasks::{futures, Task};
+use bevy_asset::io::{AssetReaderError, AssetSourceBuilder, AssetSourceId};
+use bevy_asset::{AssetApp as _, AssetEvent, AssetServer, Assets, Handle, LoadState, LoadedFolder, UntypedAssetId, UntypedHandle};
+use rootcause::{bail, IntoReport as _};
+use rootcause::prelude::ResultExt as _;
+use rootcause::report_collection::ReportCollection;
+use serde::{Deserialize, Serialize};
+use bevy_utils::simple_state_object::SimpleStateObjectPlugin;
+use mod_asset_source::{embedded_assets, ModsAssetReader, MODS_FOLDER};
+use model::ModModel;
+use registry::path::FieldPath;
+use registry::registry::id::RawId;
+use registry::registry::reflect_registry::BuildReflectRegistry;
 use utils::map::{HashMap, HashSet};
 use utils::rootcause_ext::AttachField;
-
-pub mod json5_asset_plugin;
+use crate::mods::{HotReloadingSystems, ModData, ModLoadErrorMessage, ModLoadedMessage, ModState, WantLoadModMessage};
 
 pub static ASSET_READER: LazyLock<ModsAssetReader> = LazyLock::new(|| {
     let ab = ModsAssetReader::new();
@@ -304,12 +289,12 @@ fn loader(
                 }
                 id if id == image_type_id
                     && images.contains(&handle.clone().typed_debug_checked::<Image>()) =>
-                {
-                    let Some(path) = asset_path(&asset_server, handle) else {
-                        continue;
-                    };
-                    db_images.push((path, handle.clone().typed_debug_checked::<Image>()));
-                }
+                    {
+                        let Some(path) = asset_path(&asset_server, handle) else {
+                            continue;
+                        };
+                        db_images.push((path, handle.clone().typed_debug_checked::<Image>()));
+                    }
                 _ => {
                     error!(
                         ?handle,
@@ -456,8 +441,8 @@ fn construct_mod<'a, 'path>(
             RawId::new(id),
             img,
         )
-        .context("Failed to add image to registry")
-        .attach_with(|| AttachField("Image path", path_lossy.clone()))?;
+            .context("Failed to add image to registry")
+            .attach_with(|| AttachField("Image path", path_lossy.clone()))?;
     }
 
     for (path, asset) in files {

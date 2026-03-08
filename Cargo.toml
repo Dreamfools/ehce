@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["game", "utils", "common_model", "collider_generator", "registry", "model", "mod_asset_source"]
+members = ["game", "utils", "common_model", "collider_generator", "registry", "model", "mod_asset_source", "mod_loading", "bevy_utils"]
 
 [workspace.dependencies]
 ahash = { version = "0.8", default-features = false }
@@ -50,6 +50,8 @@ common_model = { path = "common_model" }
 registry = { path = "registry" }
 model = { path = "model" }
 mod_asset_source = { path = "mod_asset_source" }
+mod_loading = { path = "mod_loading" }
+bevy_utils = { path = "bevy_utils" }
 
 [workspace.lints.rust]
 # Mark `bevy_lint` as a valid `cfg`, as it is set when the Bevy linter runs.
