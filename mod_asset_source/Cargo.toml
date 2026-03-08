@@ -14,7 +14,7 @@ fs-err = { workspace = true }
 utils = { workspace = true }
 parking_lot = { workspace = true }
 futures-core = { workspace = true }
-globset = { workspace = true }
+ignore = { workspace = true }
 tracing = { workspace = true }
 
 [lints]

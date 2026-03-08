@@ -1,14 +1,26 @@
+use bevy_asset::AsyncReadExt;
 use bevy_asset::io::{AssetReader, AssetReaderError, PathStream, Reader};
 use bevy_tasks::futures_lite::StreamExt as _;
+use ignore::gitignore::Gitignore;
 use std::collections::hash_map::Entry;
 use std::fmt::Display;
 use std::ops::Deref as _;
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use std::{env, io, path};
-use utils::map::HashMap;
+use utils::map::{HashMap, HashSet};
 
 use tracing::{info, warn};
+
+static KNOWN_EXTENSIONS: LazyLock<HashSet<String>> = LazyLock::new(|| {
+    [
+        "json", "json5", // assets
+        "png", "jpg", "jpeg", // images
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect()
+});
 
 mod read_dir;
 mod read_file;
@@ -64,13 +76,17 @@ impl ModsAssetReader {
             EmbeddedOnRelease::Embedded { dir } => {
                 self.systems.lock().push(Arc::new(ModFs {
                     driver: Arc::new(FsDriver::Embedded { dir }),
-                    ignore: Arc::new(Default::default()),
+                    ignore: Arc::new(Gitignore::empty()),
+                    prefix: Default::default(),
                     name,
                 }));
             }
             EmbeddedOnRelease::FileSystem { root } => {
                 #[cfg(target_arch = "wasm32")]
-                panic!("Embedded drivers must be in the embedded format on wasm, but {} is a filesystem driver",name);
+                panic!(
+                    "Embedded drivers must be in the embedded format on wasm, but {} is a filesystem driver",
+                    name
+                );
                 self.add_filesystem(root);
             }
         }
@@ -103,7 +119,8 @@ impl ModsAssetReader {
         self.systems.lock().push(Arc::new(ModFs {
             name: root.to_string_lossy().to_string(),
             driver: Arc::new(FsDriver::FileSystem { root }),
-            ignore: Arc::new(Default::default()),
+            ignore: Arc::new(Gitignore::empty()),
+            prefix: Default::default(),
         }));
 
         self.mark_dirty();
@@ -239,14 +256,14 @@ fn mod_name_from_path(path: &Path) -> Result<String, AssetReaderError> {
 
 impl AssetReader for ModsAssetReader {
     async fn read<'a>(&'a self, path: &'a Path) -> Result<impl Reader, AssetReaderError> {
-        info!(path = %path.display(), "Reading asset from mods");
+        info!(path = %path.display(), "Reading asset");
         let mod_name = mod_name_from_path(path)?;
         let fs = self.get_mod(&mod_name).await?;
         fs.read_file(path).await
     }
 
     async fn read_meta<'a>(&'a self, path: &'a Path) -> Result<impl Reader, AssetReaderError> {
-        info!(path = %path.display(), "Reading asset meta from mods");
+        info!(path = %path.display(), "Reading asset meta");
         let mod_name = mod_name_from_path(path)?;
         let fs = self.get_mod(&mod_name).await?;
         fs.read_file(&get_meta_path(path)).await
@@ -256,14 +273,14 @@ impl AssetReader for ModsAssetReader {
         &'a self,
         path: &'a Path,
     ) -> Result<Box<PathStream>, AssetReaderError> {
-        info!(path = %path.display(), "Reading directory from mods");
+        info!(path = %path.display(), "Reading directory");
         let mod_name = mod_name_from_path(path)?;
         let fs = self.get_mod(&mod_name).await?;
         Ok(Box::new(fs.read_directory(path).await?))
     }
 
     async fn is_directory<'a>(&'a self, path: &'a Path) -> Result<bool, AssetReaderError> {
-        info!(path = %path.display(), "Checking if path is a directory in mods");
+        info!(path = %path.display(), "Checking if path is a directory");
         let mod_name = mod_name_from_path(path)?;
         let fs = self.get_mod(&mod_name).await?;
         fs.is_directory(path).await
@@ -322,7 +339,8 @@ macro_rules! embedded_assets {
 
 struct ModFs {
     driver: Arc<FsDriver>,
-    ignore: Arc<globset::GlobSet>,
+    ignore: Arc<Gitignore>,
+    prefix: PathBuf,
     name: String,
 }
 
@@ -333,38 +351,85 @@ enum FsDriver {
 
 impl ModFs {
     async fn list_mods(self: &Arc<Self>) -> Result<Vec<ModFs>, AssetReaderError> {
-        match self.driver.deref() {
+        let mut mods = match self.driver.deref() {
             FsDriver::Embedded { dir } => {
                 let mut mods = Vec::new();
                 for dir in dir.dirs() {
+                    let name = utf8_file_name(dir.path())?;
                     mods.push(ModFs {
-                        name: utf8_file_name(dir.path())?,
+                        prefix: PathBuf::from(&name),
+                        name,
                         driver: self.driver.clone(),
                         ignore: self.ignore.clone(),
                     });
                 }
 
-                Ok(mods)
+                mods
             }
             FsDriver::FileSystem { root } => {
                 let mut entries = async_fs::read_dir(root).await?;
                 let mut mods = Vec::new();
                 while let Some(entry) = entries.try_next().await? {
                     if entry.file_type().await?.is_dir() {
+                        let name = utf8_file_name(&entry.path())?;
                         mods.push(ModFs {
-                            name: utf8_file_name(&entry.path())?,
+                            prefix: PathBuf::from(&name),
+                            name,
                             driver: self.driver.clone(),
                             ignore: self.ignore.clone(),
                         });
                     }
                 }
-                Ok(mods)
+                mods
             }
+        };
+
+        for mod_fs in &mut mods {
+            match mod_fs
+                .read_file(&PathBuf::from(&mod_fs.name).join(".modignore"))
+                .await
+            {
+                Ok(mut reader) => {
+                    let mut ib = ignore::gitignore::GitignoreBuilder::new(PathBuf::from("/").join(&mod_fs.name));
+                    let mut buffer = String::new();
+                    reader.read_to_string(&mut buffer).await.map_err(|err| {
+                        custom_error(format!(
+                            "Failed to read .modignore for mod {}: {}",
+                            mod_fs.name, err
+                        ))
+                    })?;
+
+                    for line in buffer.lines() {
+                        ib.add_line(None, line).map_err(|err| {
+                            custom_error(format!(
+                                "Invalid pattern in .modignore for mod {}: {}",
+                                mod_fs.name, err
+                            ))
+                        })?;
+                    }
+                    let ignore = ib.build().map_err(|err| {
+                        custom_error(format!(
+                            "Failed to build ignore matcher for mod {}: {}",
+                            mod_fs.name, err
+                        ))
+                    })?;
+                    mod_fs.ignore = Arc::new(ignore)
+                }
+                Err(AssetReaderError::NotFound(_)) => continue,
+                Err(err) => {
+                    return Err(custom_error(format!(
+                        "Failed to read .modignore for mod {}: {}",
+                        mod_fs.name, err
+                    )));
+                }
+            };
         }
+
+        Ok(mods)
     }
 
     async fn is_directory(&self, path: &Path) -> Result<bool, AssetReaderError> {
-        self.check_ignore(path)?;
+        self.check_ignore(path, true)?;
         match self.driver.deref() {
             FsDriver::Embedded { dir } => Ok(dir.get_dir(path).is_some()),
             FsDriver::FileSystem { root } => {
@@ -374,13 +439,18 @@ impl ModFs {
         }
     }
 
-    fn check_ignore(&self, path: &Path) -> Result<(), AssetReaderError> {
-        if self.ignore.is_match(path) {
+    fn check_ignore(&self, path: &Path, is_dir: bool) -> Result<(), AssetReaderError> {
+        if ignore_matches(&self.ignore, path, is_dir) {
             Err(AssetReaderError::NotFound(path.to_owned()))
         } else {
             Ok(())
         }
     }
+}
+
+fn ignore_matches(ignore: &Gitignore, path: &Path, is_dir: bool) -> bool {
+    let prefixed = PathBuf::from("/").join(path);
+    ignore.matched(prefixed, is_dir).is_ignore()
 }
 
 impl Display for ModFs {

@@ -1,29 +1,47 @@
+use crate::{FsDriver, ModFs, normalize_with_parent};
+use bevy_asset::io::{AssetReaderError, Reader, ReaderNotSeekableError, SeekableReader};
+use bevy_tasks::futures_lite::{AsyncRead, AsyncSeek};
+use std::io;
 use std::io::SeekFrom;
 use std::ops::Deref as _;
 use std::path::Path;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
-use bevy_asset::io::{AssetReaderError, Reader, ReaderNotSeekableError, SeekableReader};
-use bevy_tasks::futures_lite::{AsyncRead, AsyncSeek};
-use crate::{normalize_with_parent, ModFs, FsDriver};
 
 impl ModFs {
     pub(crate) async fn read_file(&self, path: &Path) -> Result<ModFsReader, AssetReaderError> {
-        self.check_ignore(path)?;
+        self.check_ignore(path, false)?;
         match self.driver.deref() {
             FsDriver::Embedded { dir } => {
-                let file = dir
-                    .get_file(path)
+                let entry = dir
+                    .get_entry(path)
                     .ok_or_else(|| AssetReaderError::NotFound(path.to_owned()))?;
+
+                let file = entry.as_file().ok_or_else(|| is_a_directory_error(path))?;
                 Ok(ModFsReader::Bytes(file.contents(), 0))
             }
             FsDriver::FileSystem { root } => {
                 let file_path = normalize_with_parent(root, path)?;
-                let file = async_fs::File::open(file_path).await?;
+
+                let file = async_fs::File::open(file_path).await.map_err(|err| {
+                    if err.kind() == std::io::ErrorKind::NotFound {
+                        AssetReaderError::NotFound(path.to_owned())
+                    } else {
+                        err.into()
+                    }
+                })?;
                 Ok(ModFsReader::File(file))
             }
         }
     }
+}
+
+fn is_a_directory_error(path: &Path) -> AssetReaderError {
+    AssetReaderError::Io(Arc::new(io::Error::new(
+        io::ErrorKind::IsADirectory,
+        format!("{} is a directory", path.display()),
+    )))
 }
 
 pub(crate) enum ModFsReader {
