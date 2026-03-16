@@ -1,4 +1,4 @@
-use crate::sprite::SpriteId;
+use crate::types::sprite::SpriteId;
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

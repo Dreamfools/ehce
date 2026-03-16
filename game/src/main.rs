@@ -41,7 +41,7 @@ use mod_asset_source::MODS_FOLDER;
 use mod_loading::json5_asset_plugin::Json5AssetPlugin;
 use mod_loading::loading::{CustomAssetReaderPlugin, DatabaseAsset, load_last_mod};
 use mod_loading::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
-use model::spaceship::SpaceshipModel;
+use model::registries::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
 
 fn main() -> AppExit {

@@ -1,4 +1,4 @@
-use crate::variable::UnitVariableModel;
+use crate::registries::variable::UnitVariableModel;
 use bevy_reflect::{Reflect, TypePath};
 use exmex::Express as _;
 use registry::registry::id::{IdRef, RawId};

@@ -1,4 +1,4 @@
-use crate::formula::formula_context::UnitFormulaModel;
+use crate::types::formula::formula_context::UnitFormulaModel;
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

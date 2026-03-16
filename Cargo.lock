@@ -5759,7 +5759,7 @@ dependencies = [
 name = "utils"
 version = "0.1.0"
 dependencies = [
- "ahash",
+ "bevy",
  "bevy_color",
  "csscolorparser",
  "dashmap",

@@ -1,4 +1,4 @@
-use crate::formula::{FormulaModel, FormulaModelContext, FormulaVariable};
+use crate::types::formula::{FormulaModel, FormulaModelContext, FormulaVariable};
 use bevy_reflect::TypePath;
 
 #[derive(TypePath)]

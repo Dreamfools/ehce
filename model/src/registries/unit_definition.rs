@@ -1,5 +1,5 @@
-use crate::formula::formula_context::UnitFormulaModel;
-use crate::variable::UnitVariableModel;
+use crate::types::formula::formula_context::UnitFormulaModel;
+use crate::registries::variable::UnitVariableModel;
 use bevy_reflect::Reflect;
 use registry::registry::id::IdRef;
 use schemars::JsonSchema;
