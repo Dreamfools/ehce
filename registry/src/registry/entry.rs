@@ -74,7 +74,7 @@ const _: () = {
         {
             struct StrDeserializer<'a, E> {
                 value: &'a str,
-                marker: PhantomData<E>,
+                marker: PhantomData<fn() -> E>,
             }
 
             impl<'de, 'a, E> Deserializer<'de> for StrDeserializer<'a, E>

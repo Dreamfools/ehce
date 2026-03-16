@@ -25,7 +25,6 @@ mod ecs_tools;
 use crate::combat::CombatPlugin;
 use crate::combat::controller::behavior::player_behavior::PlayerBehavior;
 use crate::combat::controller::inputs::ControllerInputs;
-use crate::combat::controller::tank_controller::PhysicsTankController;
 use crate::state::GameState;
 use avian2d::prelude::*;
 use bevy::camera::ScalingMode;
@@ -40,7 +39,7 @@ use bevy::{
 use inline_tweak::tweak;
 use mod_asset_source::MODS_FOLDER;
 use mod_loading::json5_asset_plugin::Json5AssetPlugin;
-use mod_loading::loading::{load_last_mod, CustomAssetReaderPlugin, DatabaseAsset};
+use mod_loading::loading::{CustomAssetReaderPlugin, DatabaseAsset, load_last_mod};
 use mod_loading::mods::{ModData, ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
 use model::spaceship::SpaceshipModel;
 use registry::registry::id::{IdRef, RawId};
@@ -142,7 +141,7 @@ fn setup_ships(
     _meshes: ResMut<Assets<Mesh>>,
     mod_data: Res<ModData>,
 ) {
-    let scout = &mod_data.registry[IdRef::<SpaceshipModel>::new(RawId::new("scout"))];
+    let scout = &mod_data.registry[IdRef::<SpaceshipModel>::new(RawId::new("base:scout"))];
     let circle = Circle::new(30.0);
 
     let mut sprite = Sprite::from_image(mod_data.registry[scout.sprite].clone());
@@ -158,7 +157,7 @@ fn setup_ships(
         sprite,
         PlayerBehavior::Directional,
         ControllerInputs::default(),
-        PhysicsTankController::from_model(&scout.controller),
+        // PhysicsTankController::from_model(&scout.controller),
         Mass(1.0),
         // Mesh2d(mesh.clone()),
         // MeshMaterial2d(materials.add(Color::from(CYAN_400)).clone()),

@@ -1,0 +1,6 @@
+{
+  "unit_definition": {
+    id: "base:scout",
+    "weight": "5 * {core:cells_count}"
+  }
+}

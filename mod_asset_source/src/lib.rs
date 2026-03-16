@@ -385,7 +385,9 @@ impl ModFs {
                 .await
             {
                 Ok(mut reader) => {
-                    let mut ib = ignore::gitignore::GitignoreBuilder::new(PathBuf::from("/").join(&mod_fs.name));
+                    let mut ib = ignore::gitignore::GitignoreBuilder::new(
+                        PathBuf::from("/").join(&mod_fs.name),
+                    );
                     let mut buffer = String::new();
                     reader.read_to_string(&mut buffer).await.map_err(|err| {
                         custom_error(format!(
@@ -412,7 +414,7 @@ impl ModFs {
                 }
                 Err(AssetReaderError::NotFound(_)) => {
                     // No .modignore file, just use an empty ignore matcher
-                },
+                }
                 Err(err) => {
                     return Err(custom_error(format!(
                         "Failed to read .modignore for mod {}: {}",

@@ -11,6 +11,8 @@ ustr = { workspace = true, features = ["serde"] }
 itertools = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 schemars = { workspace = true }
+logos = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true

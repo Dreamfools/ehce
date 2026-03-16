@@ -126,10 +126,11 @@ impl ModFsDirStreamKind {
                 cur_task,
             } => {
                 if let Some(fut) = cur_task
-                    && let Poll::Ready(res) = fut.poll(cx) {
-                        *cur_task = None;
-                        return Poll::Ready(res);
-                    }
+                    && let Poll::Ready(res) = fut.poll(cx)
+                {
+                    *cur_task = None;
+                    return Poll::Ready(res);
+                }
                 match Pin::new(read_dir).poll_next(cx) {
                     Poll::Ready(Some(Ok(entry))) => {
                         let path = match entry.path().strip_prefix(root) {

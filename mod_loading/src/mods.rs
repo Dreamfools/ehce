@@ -1,9 +1,9 @@
+use crate::loading::ModLoadingPlugin;
 use bevy::app::{App, First, Plugin};
 use bevy::prelude::{AppExtStates as _, Message, Reflect, Resource, States, SystemSet};
 use bevy::state::state::FreelyMutableState;
 use registry::registry::reflect_registry::ReflectRegistry;
 use rootcause::Report;
-use crate::loading::ModLoadingPlugin;
 
 #[derive(Debug)]
 pub struct ModPlugin;

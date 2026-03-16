@@ -1,10 +1,12 @@
 use crate::combat::controller::inputs::ControllerInputs;
 use crate::ecs_tools::component_invariants;
-use avian2d::prelude::{AngularDamping, AngularVelocity, ComputedAngularInertia, ComputedMass, LinearVelocity, RigidBody};
+use avian2d::prelude::{
+    AngularDamping, AngularVelocity, ComputedAngularInertia, ComputedMass, LinearVelocity,
+    RigidBody,
+};
 use bevy::math::Vec2;
 use bevy::prelude::{Component, Query, Reflect, Res, Transform};
 use bevy::time::{Fixed, Time};
-use model::controllers::TankControllerModel;
 
 #[derive(Debug, Clone, Reflect, Component)]
 pub struct PhysicsTankController {
@@ -19,16 +21,16 @@ pub struct PhysicsTankController {
 component_invariants!(PhysicsTankController : RigidBody, ControllerInputs);
 
 impl PhysicsTankController {
-    pub fn from_model(model: &TankControllerModel) -> PhysicsTankController {
-        Self {
-            acceleration_force: model.acceleration_force,
-            deceleration_force: model.deceleration_force,
-            braking_force: model.braking_force,
-            turn_torgue: model.turn_torgue,
-            max_speed: model.max_speed,
-            max_angular_speed: model.max_angular_speed,
-        }
-    }
+    // pub fn from_model(model: &TankControllerModel) -> PhysicsTankController {
+    //     Self {
+    //         acceleration_force: model.acceleration_force,
+    //         deceleration_force: model.deceleration_force,
+    //         braking_force: model.braking_force,
+    //         turn_torgue: model.turn_torgue,
+    //         max_speed: model.max_speed,
+    //         max_angular_speed: model.max_angular_speed,
+    //     }
+    // }
 }
 
 pub fn tank_controller_update(

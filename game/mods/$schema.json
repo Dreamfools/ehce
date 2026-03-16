@@ -5,25 +5,49 @@
     {
       "type": "object",
       "properties": {
-        "Spaceship": {
+        "spaceship": {
           "$ref": "#/$defs/Entry%3CSpaceshipModel%3E"
         }
       },
       "additionalProperties": false,
       "required": [
-        "Spaceship"
+        "spaceship"
       ]
     },
     {
       "type": "object",
       "properties": {
-        "GameSetting": {
+        "unit_definition": {
+          "$ref": "#/$defs/Entry%3CUnitDefinitionModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unit_definition"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "unit_variable": {
+          "$ref": "#/$defs/Entry%3CUnitVariableModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unit_variable"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "game_setting": {
           "$ref": "#/$defs/GameSettings"
         }
       },
       "additionalProperties": false,
       "required": [
-        "GameSetting"
+        "game_setting"
       ]
     }
   ],
@@ -81,7 +105,8 @@
           "$ref": "#/$defs/TankControllerModel"
         },
         "id": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
         },
         "model_size": {
           "type": "number",
@@ -96,6 +121,59 @@
         "sprite",
         "model_size",
         "controller"
+      ]
+    },
+    "Entry<UnitDefinitionModel>": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "weight": {
+          "$ref": "#/$defs/Formula"
+        }
+      },
+      "required": [
+        "id",
+        "weight"
+      ]
+    },
+    "Entry<UnitVariableModel>": {
+      "type": "object",
+      "properties": {
+        "default_value": {
+          "description": "The default value of the variable",
+          "type": "number",
+          "format": "double"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "readonly": {
+          "description": "Whether the variable is read-only (cannot be modified after being initialized)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "default_value",
+        "readonly"
+      ]
+    },
+    "Formula": {
+      "description": "fn() -> f64\nIds refer to unit variables by default",
+      "anyOf": [
+        {
+          "description": "A formula string, e.g. \"2 * x + 1\"",
+          "type": "string"
+        },
+        {
+          "description": "A constant number, e.g. 3.14",
+          "type": "number",
+          "format": "double"
+        }
       ]
     },
     "GameSettings": {

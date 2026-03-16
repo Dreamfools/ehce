@@ -178,7 +178,7 @@ const _: () = {
             D: Deserializer<'de>,
         {
             struct RangeInclusiveModelVisitor<T> {
-                marker: std::marker::PhantomData<T>,
+                marker: std::marker::PhantomData<fn() -> T>,
             }
 
             impl<'de, T: Deserialize<'de> + Debug + Clone + NumAssignRef + PartialOrd>

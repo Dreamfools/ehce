@@ -7,12 +7,12 @@ use thiserror::Error;
 
 pub struct Json5AssetPlugin<A> {
     extensions: Vec<&'static str>,
-    _marker: PhantomData<A>,
+    _marker: PhantomData<fn() -> A>,
 }
 
 impl<A> Plugin for Json5AssetPlugin<A>
 where
-        for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: serde::Deserialize<'de> + Asset,
 {
     fn build(&self, app: &mut App) {
         app.init_asset::<A>()
@@ -25,10 +25,10 @@ where
 
 impl<A> Json5AssetPlugin<A>
 where
-        for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: serde::Deserialize<'de> + Asset,
 {
     /// Create a new plugin that will load assets from files with the given extensions.
-    #[must_use] 
+    #[must_use]
     pub fn new(extensions: &[&'static str]) -> Self {
         Self {
             extensions: extensions.to_owned(),
@@ -41,7 +41,7 @@ where
 #[derive(TypePath)]
 pub struct Json5AssetLoader<A> {
     extensions: Vec<&'static str>,
-    _marker: PhantomData<A>,
+    _marker: PhantomData<fn() -> A>,
 }
 
 /// Possible errors that can be produced by [`Json5AssetLoader`]
@@ -58,7 +58,7 @@ pub enum Json5LoaderError {
 
 impl<A> AssetLoader for Json5AssetLoader<A>
 where
-        for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: serde::Deserialize<'de> + Asset,
 {
     type Asset = A;
     type Settings = ();

@@ -1,12 +1,12 @@
-use std::fmt::Debug;
-use std::marker::PhantomData;
 use bevy::app::{App, Plugin};
 use bevy::log::error;
 use bevy::prelude::{Commands, OnEnter, OnExit, Res, Resource, State, States};
+use std::fmt::Debug;
+use std::marker::PhantomData;
 
 /// Simple plugin to assert the presence of a resource when entering a state
 /// and remove it when exiting the state.
-pub struct SimpleStateObjectPlugin<S: States + Clone, T: Resource>(S, PhantomData<T>);
+pub struct SimpleStateObjectPlugin<S: States + Clone, T: Resource>(S, PhantomData<fn() -> T>);
 
 impl<S: States + Clone, T: Resource> SimpleStateObjectPlugin<S, T> {
     pub fn new(state: S) -> Self {
