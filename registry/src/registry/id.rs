@@ -7,7 +7,7 @@ use schemars::_private::serde_json;
 use schemars::{JsonSchema, Schema, SchemaGenerator};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::str::FromStr;
@@ -79,6 +79,12 @@ impl<T> Clone for IdRef<T> {
     }
 }
 
+impl<T> Display for IdRef<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.id.fmt(f)
+    }
+}
+
 impl<T: TypePath> JsonSchema for IdRef<T> {
     fn inline_schema() -> bool {
         false
@@ -97,7 +103,13 @@ impl<T: TypePath> JsonSchema for IdRef<T> {
     }
 
     fn json_schema(generator: &mut SchemaGenerator) -> Schema {
-        String::json_schema(generator)
+        let mut schema = String::json_schema(generator);
+        schema.insert(
+            "pattern".to_string(),
+            serde_json::json!("^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"),
+        );
+
+        schema
     }
 }
 

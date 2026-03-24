@@ -3,13 +3,6 @@
     "id": "base:scout",
     "sprite": "base:scout.png",
     "model_size": 1,
-    "controller": {
-      "acceleration_force": 12,
-      "deceleration_force": 6,
-      "braking_force": 1,
-      "turn_torgue": 3,
-      "max_speed": 12,
-      "max_angular_speed": 6,
-    }
+    "unit": "base:scout",
   },
 }

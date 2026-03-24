@@ -1,4 +1,5 @@
 use crate::registries::variable::UnitVariableModel;
+use bevy_reflect::erased_serde::__private::serde::de::Error;
 use bevy_reflect::{Reflect, TypePath};
 use exmex::Express as _;
 use registry::registry::id::{IdRef, RawId};
@@ -178,6 +179,13 @@ const _: () = {
 
                 fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
                     write!(formatter, "formula string or a number")
+                }
+
+                fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
+                    self.visit_f64(v as f64)
                 }
 
                 fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>

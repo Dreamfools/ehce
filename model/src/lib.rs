@@ -1,10 +1,10 @@
-use registries::device::DeviceModel;
 use crate::settings::game_settings::GameSettings;
+use bevy_reflect::{Reflect, Type, Typed as _};
+pub use common_model as common;
+use registries::device::DeviceModel;
 use registries::spaceship::SpaceshipModel;
 use registries::unit_definition::UnitDefinitionModel;
 use registries::variable::UnitVariableModel;
-use bevy_reflect::{Reflect, Type, Typed as _};
-pub use common_model as common;
 use registry::registry::entry::Entry;
 use registry::registry::singleton::Singleton;
 use schemars::JsonSchema;

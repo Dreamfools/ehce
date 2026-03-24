@@ -1,14 +1,12 @@
-use crate::types::formula::formula_context::UnitFormulaModel;
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
 pub struct TankControllerDeviceModel {
-    pub acceleration_force: UnitFormulaModel,
-    pub deceleration_force: UnitFormulaModel,
-    pub braking_force: UnitFormulaModel,
-    pub turn_torgue: UnitFormulaModel,
-    pub max_speed: UnitFormulaModel,
-    pub max_angular_speed: UnitFormulaModel,
+    pub acceleration_force: f32,
+    pub braking_force: f32,
+    pub turn_torgue: f32,
+    pub max_speed: f32,
+    pub max_angular_speed: f32,
 }

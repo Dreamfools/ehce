@@ -17,6 +17,18 @@
     {
       "type": "object",
       "properties": {
+        "device": {
+          "$ref": "#/$defs/Entry%3CDeviceModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "device"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
         "unit_definition": {
           "$ref": "#/$defs/Entry%3CUnitDefinitionModel%3E"
         }
@@ -52,6 +64,13 @@
     }
   ],
   "$defs": {
+    "ActivationMode": {
+      "type": "string",
+      "enum": [
+        "Automatic",
+        "Manual"
+      ]
+    },
     "ColorDataSerialized": {
       "anyOf": [
         {
@@ -98,12 +117,42 @@
     "ColorModel": {
       "$ref": "#/$defs/ColorDataSerialized"
     },
+    "DeviceModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
+    },
+    "Entry<DeviceModel>": {
+      "type": "object",
+      "properties": {
+        "activation": {
+          "$ref": "#/$defs/ActivationMode"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "tank_controller": {
+              "$ref": "#/$defs/TankControllerDeviceModel"
+            }
+          },
+          "required": [
+            "tank_controller"
+          ]
+        }
+      ],
+      "required": [
+        "id",
+        "activation"
+      ]
+    },
     "Entry<SpaceshipModel>": {
       "type": "object",
       "properties": {
-        "controller": {
-          "$ref": "#/$defs/TankControllerModel"
-        },
         "id": {
           "type": "string",
           "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
@@ -114,21 +163,40 @@
         },
         "sprite": {
           "$ref": "#/$defs/HandleId"
+        },
+        "unit": {
+          "$ref": "#/$defs/UnitDefinitionModelId"
         }
       },
       "required": [
         "id",
         "sprite",
         "model_size",
-        "controller"
+        "unit"
       ]
     },
     "Entry<UnitDefinitionModel>": {
       "type": "object",
       "properties": {
+        "builtin_devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DeviceModelId"
+          }
+        },
         "id": {
           "type": "string",
           "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "preset_variables": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$": {
+              "type": "number",
+              "format": "double"
+            }
+          }
         },
         "weight": {
           "$ref": "#/$defs/Formula"
@@ -136,7 +204,9 @@
       },
       "required": [
         "id",
-        "weight"
+        "weight",
+        "preset_variables",
+        "builtin_devices"
       ]
     },
     "Entry<UnitVariableModel>": {
@@ -202,9 +272,10 @@
       ]
     },
     "HandleId": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
     },
-    "TankControllerModel": {
+    "TankControllerDeviceModel": {
       "type": "object",
       "properties": {
         "acceleration_force": {
@@ -212,10 +283,6 @@
           "format": "float"
         },
         "braking_force": {
-          "type": "number",
-          "format": "float"
-        },
-        "deceleration_force": {
           "type": "number",
           "format": "float"
         },
@@ -234,12 +301,15 @@
       },
       "required": [
         "acceleration_force",
-        "deceleration_force",
         "braking_force",
         "turn_torgue",
         "max_speed",
         "max_angular_speed"
       ]
+    },
+    "UnitDefinitionModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
     }
   }
 }
