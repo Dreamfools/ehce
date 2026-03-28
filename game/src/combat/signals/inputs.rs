@@ -2,6 +2,7 @@ use crate::combat::signals::{SignalId, SignalValue, UnitSignals};
 use crate::ecs_tools::component_invariants;
 use bevy::math::{Vec3, Vec3Swizzles as _};
 use bevy::prelude::{ButtonInput, Component, GlobalTransform, KeyCode, Query, Reflect, Res};
+use crate::combat::device::DeviceOf;
 
 #[derive(Debug, Clone, Reflect, Component)]
 pub enum PlayerBehavior {
@@ -13,9 +14,14 @@ component_invariants!(PlayerBehavior: UnitSignals);
 
 pub fn update_player_behavior(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    q: Query<(&GlobalTransform, &PlayerBehavior, &mut UnitSignals)>,
+    device: Query<(&DeviceOf, &PlayerBehavior)>,
+    mut q: Query<(&GlobalTransform, &mut UnitSignals)>,
 ) {
-    for (transform, behavior, mut input) in q {
+    for (device_of, behavior) in device {
+        let Ok((transform, mut input)) = q.get_mut(device_of.parent()) else {
+            continue;
+        };
+
         let mut facing = SignalValue::Off;
         let mut movement = SignalValue::Off;
         match behavior {

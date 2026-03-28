@@ -3,6 +3,7 @@ use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+pub mod player_inputs;
 pub mod tank_controller;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
@@ -15,5 +16,6 @@ pub struct DeviceModel {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
 #[serde(rename_all = "snake_case")]
 pub enum DeviceKindModel {
+    PlayerInputs(player_inputs::PlayerInputsDeviceModel),
     TankController(tank_controller::TankControllerDeviceModel),
 }

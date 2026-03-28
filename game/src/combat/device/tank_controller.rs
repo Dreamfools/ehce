@@ -1,3 +1,4 @@
+use crate::combat::device::DeviceOf;
 use crate::combat::signals::{SignalId, SignalValue, UnitSignals};
 use crate::ecs_tools::component_invariants;
 use avian2d::prelude::{
@@ -35,10 +36,10 @@ impl PhysicsTankController {
 
 pub(super) fn tank_controller_update(
     fixed_time: Res<Time<Fixed>>,
-    q: Query<(
+    device: Query<(&DeviceOf, &PhysicsTankController)>,
+    mut q: Query<(
         &Transform,
         &UnitSignals,
-        &PhysicsTankController,
         &ComputedMass,
         &ComputedAngularInertia,
         &RigidBody,
@@ -48,18 +49,21 @@ pub(super) fn tank_controller_update(
     )>,
 ) {
     let dt = fixed_time.delta_secs();
-    for (
-        transform,
-        inputs,
-        controller,
-        mass,
-        angular_inertia,
-        rb,
-        mut linear_velocity,
-        mut angular_velocity,
-        angular_damping,
-    ) in q
-    {
+    for (device_of, controller) in device {
+        let Ok((
+            transform,
+            inputs,
+            mass,
+            angular_inertia,
+            rb,
+            mut linear_velocity,
+            mut angular_velocity,
+            angular_damping,
+        )) = q.get_mut(device_of.0)
+        else {
+            continue;
+        };
+
         if rb.is_static() {
             continue;
         }

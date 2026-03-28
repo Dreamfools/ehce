@@ -9,12 +9,13 @@ use bevy::log::info;
 use bevy::prelude::{
     Circle, Commands, EntityCommands, Message, Messages, Name, Res, ResMut, Sprite, Transform, Vec2,
 };
-use bevy::reflect::Reflect;
+use bevy::reflect::{Reflect};
 use mod_loading::mods::ModData;
 use model::registries::device::{DeviceKindModel, DeviceModel};
 use model::registries::spaceship::SpaceshipModel;
 use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
+use crate::combat::device::DeviceOf;
 
 pub struct SpawningPlugin;
 
@@ -29,6 +30,7 @@ impl Plugin for SpawningPlugin {
 pub struct SpawnSpaceshipMessage {
     pub id: IdRef<SpaceshipModel>,
     pub position: Vec2,
+    pub extra_devices: Vec<IdRef<DeviceModel>>,
 }
 
 fn sys_spawn_spaceships(
@@ -62,23 +64,28 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         Transform::from_xyz(msg.position.x, msg.position.y, 0.0),
         sprite,
         UnitSignals::default(),
-        PlayerBehavior::Directional,
-        // PhysicsTankController::from_model(&scout.controller),
         Mass(1.0),
     ));
 
     let unit_def = &reg[ship.unit];
 
-    for device in &unit_def.builtin_devices {
+    for device in unit_def.builtin_devices.iter().chain(msg.extra_devices.iter()) {
         spawn_device(reg, entity.reborrow(), device);
     }
 }
 
-fn spawn_device(reg: &ReflectRegistry, mut entity: EntityCommands, id: &IdRef<DeviceModel>) {
-    let device = &reg[id];
+fn spawn_device(
+    reg: &ReflectRegistry,
+    mut entity: EntityCommands,
+    device_id: &IdRef<DeviceModel>,
+) {
+    let device = &reg[device_id];
     match &device.kind {
         DeviceKindModel::TankController(tank) => {
-            entity.insert(PhysicsTankController::from_device(tank));
+            entity.with_related::<DeviceOf>(PhysicsTankController::from_device(tank));
+        }
+        DeviceKindModel::PlayerInputs(_) => {
+            entity.with_related::<DeviceOf>(PlayerBehavior::Directional);
         }
     }
 }

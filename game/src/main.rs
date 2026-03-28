@@ -131,6 +131,9 @@ fn setup_ships(mut spawn_ships: MessageWriter<SpawnSpaceshipMessage>) {
     spawn_ships.write(SpawnSpaceshipMessage {
         id: IdRef::<SpaceshipModel>::new(RawId::new("base:scout")),
         position: Default::default(),
+        extra_devices: vec![
+            IdRef::new(RawId::new("core:player_inputs"))
+        ],
     });
 }
 
