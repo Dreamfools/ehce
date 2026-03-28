@@ -70,6 +70,7 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
 
     let unit_def = &reg[ship.unit];
 
+    // TODO: store these active devices in a component?
     let mut active_devices = Default::default();
     for device in unit_def.builtin_devices.iter().chain(msg.extra_devices.iter()) {
         spawn_device(reg, entity.reborrow(), &mut active_devices, device);
