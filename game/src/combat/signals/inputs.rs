@@ -1,8 +1,8 @@
+use crate::combat::device::DeviceOf;
 use crate::combat::signals::{SignalId, SignalValue, UnitSignals};
 use crate::ecs_tools::component_invariants;
 use bevy::math::{Vec3, Vec3Swizzles as _};
 use bevy::prelude::{ButtonInput, Component, GlobalTransform, KeyCode, Query, Reflect, Res};
-use crate::combat::device::DeviceOf;
 
 #[derive(Debug, Clone, Reflect, Component)]
 pub enum PlayerBehavior {

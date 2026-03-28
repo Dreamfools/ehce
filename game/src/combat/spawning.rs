@@ -1,4 +1,5 @@
 use crate::combat::CombatPostUpdate;
+use crate::combat::device::DeviceOf;
 use crate::combat::device::tank_controller::PhysicsTankController;
 use crate::combat::signals::UnitSignals;
 use crate::combat::signals::inputs::PlayerBehavior;
@@ -9,14 +10,13 @@ use bevy::log::{info, warn};
 use bevy::prelude::{
     Circle, Commands, EntityCommands, Message, Messages, Name, Res, ResMut, Sprite, Transform, Vec2,
 };
-use bevy::reflect::{Reflect};
+use bevy::reflect::Reflect;
 use mod_loading::mods::ModData;
 use model::registries::device::{DeviceKindModel, DeviceModel};
 use model::registries::spaceship::SpaceshipModel;
 use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
 use utils::map::HashSet;
-use crate::combat::device::DeviceOf;
 
 pub struct SpawningPlugin;
 
@@ -72,7 +72,11 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
 
     // TODO: store these active devices in a component?
     let mut active_devices = Default::default();
-    for device in unit_def.builtin_devices.iter().chain(msg.extra_devices.iter()) {
+    for device in unit_def
+        .builtin_devices
+        .iter()
+        .chain(msg.extra_devices.iter())
+    {
         spawn_device(reg, entity.reborrow(), &mut active_devices, device);
     }
 }
@@ -85,7 +89,10 @@ fn spawn_device(
 ) {
     let device = &reg[device_id];
     if !active_devices.insert(*device_id) && device.unique {
-        warn!("Device {} is unique but was already active on the spaceship, skipping", device_id);
+        warn!(
+            "Device {} is unique but was already active on the spaceship, skipping",
+            device_id
+        );
         return;
     }
 
