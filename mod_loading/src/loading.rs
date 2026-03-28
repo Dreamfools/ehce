@@ -433,7 +433,7 @@ fn construct_mod<'a>(
                     };
                     let path_lossy = path.to_string_lossy().into_owned();
                     let name = path
-                        .file_name()
+                        .file_stem()
                         .ok_or_else(|| rootcause::report!("Image path has no file name"))
                         .and_then(|name| {
                             name.to_str().ok_or_else(|| {

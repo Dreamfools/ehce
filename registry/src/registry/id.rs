@@ -106,7 +106,7 @@ impl<T: TypePath> JsonSchema for IdRef<T> {
         let mut schema = String::json_schema(generator);
         schema.insert(
             "pattern".to_string(),
-            serde_json::json!("^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"),
+            serde_json::json!("^[0-9a-z_]+:[0-9a-z_/]+$"),
         );
 
         schema

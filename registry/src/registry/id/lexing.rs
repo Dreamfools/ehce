@@ -14,28 +14,17 @@ pub fn bad_path_char(c: char) -> bool {
     !matches!(c, 'a'..='z' | '0'..='9' | '_' | '/')
 }
 
-#[inline(always)]
-pub fn bad_ext_char(c: char) -> bool {
-    !matches!(c, 'a'..='z' | '0'..='9' | '_')
-}
-
 pub fn namespace_errors(namespace: &str) -> Option<(usize, char)> {
     namespace.chars().find_position(|c| bad_namespace_char(*c))
 }
 
 pub fn path_errors(namespace: &str) -> Option<(usize, char)> {
-    let mut is_ext = false;
     for (i, c) in namespace.chars().enumerate() {
-        if is_ext {
-            if bad_ext_char(c) {
-                return Some((i, c));
-            }
-        } else if c == '.' {
-            is_ext = true;
-        } else if bad_path_char(c) {
+        if bad_path_char(c) {
             return Some((i, c));
         }
     }
+
     None
 }
 

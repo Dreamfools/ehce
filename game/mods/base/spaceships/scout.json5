@@ -1,7 +1,7 @@
 {
   "spaceship": {
     "id": "base:scout",
-    "sprite": "base:scout.png",
+    "sprite": "base:scout",
     "model_size": 1,
     "unit": "base:scout",
   },

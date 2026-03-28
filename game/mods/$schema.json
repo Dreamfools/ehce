@@ -119,7 +119,7 @@
     },
     "DeviceModelId": {
       "type": "string",
-      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     },
     "Entry<DeviceModel>": {
       "type": "object",
@@ -207,7 +207,7 @@
           "type": "object",
           "additionalProperties": false,
           "patternProperties": {
-            "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$": {
+            "^[0-9a-z_]+:[0-9a-z_/]+$": {
               "type": "number",
               "format": "double"
             }
@@ -289,7 +289,7 @@
     },
     "HandleId": {
       "type": "string",
-      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     },
     "PlayerInputsDeviceModel": {
       "type": "object",
@@ -330,7 +330,7 @@
     },
     "UnitDefinitionModelId": {
       "type": "string",
-      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     }
   }
 }
