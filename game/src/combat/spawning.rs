@@ -5,7 +5,7 @@ use crate::combat::signals::inputs::PlayerBehavior;
 use avian2d::interpolation::TransformInterpolation;
 use avian2d::prelude::{Collider, Mass, RigidBody};
 use bevy::app::{App, Plugin};
-use bevy::log::info;
+use bevy::log::{info, warn};
 use bevy::prelude::{
     Circle, Commands, EntityCommands, Message, Messages, Name, Res, ResMut, Sprite, Transform, Vec2,
 };
@@ -15,6 +15,7 @@ use model::registries::device::{DeviceKindModel, DeviceModel};
 use model::registries::spaceship::SpaceshipModel;
 use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
+use utils::map::HashSet;
 use crate::combat::device::DeviceOf;
 
 pub struct SpawningPlugin;
@@ -69,17 +70,24 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
 
     let unit_def = &reg[ship.unit];
 
+    let mut active_devices = Default::default();
     for device in unit_def.builtin_devices.iter().chain(msg.extra_devices.iter()) {
-        spawn_device(reg, entity.reborrow(), device);
+        spawn_device(reg, entity.reborrow(), &mut active_devices, device);
     }
 }
 
 fn spawn_device(
     reg: &ReflectRegistry,
     mut entity: EntityCommands,
+    active_devices: &mut HashSet<IdRef<DeviceModel>>,
     device_id: &IdRef<DeviceModel>,
 ) {
     let device = &reg[device_id];
+    if !active_devices.insert(*device_id) && device.unique {
+        warn!("Device {} is unique but was already active on the spaceship, skipping", device_id);
+        return;
+    }
+
     match &device.kind {
         DeviceKindModel::TankController(tank) => {
             entity.with_related::<DeviceOf>(PhysicsTankController::from_device(tank));

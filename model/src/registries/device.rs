@@ -12,6 +12,7 @@ pub struct DeviceModel {
     #[serde(flatten)]
     pub kind: DeviceKindModel,
     pub activation: ActivationMode,
+    pub unique: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]

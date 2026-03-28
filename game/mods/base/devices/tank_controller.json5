@@ -8,6 +8,7 @@
       "turn_torgue": 3,
       "max_speed": 12,
       "max_angular_speed": 6
-    }
+    },
+    "unique": false
   }
 }
