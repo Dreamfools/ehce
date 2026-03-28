@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
+#[serde(deny_unknown_fields)]
 pub struct UnitDefinitionModel {
     pub weight: UnitFormulaModel,
     pub preset_variables: BTreeMap<IdRef<UnitVariableModel>, f64>,

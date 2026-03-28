@@ -136,6 +136,17 @@
         {
           "type": "object",
           "properties": {
+            "player_inputs": {
+              "$ref": "#/$defs/PlayerInputsDeviceModel"
+            }
+          },
+          "required": [
+            "player_inputs"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "tank_controller": {
               "$ref": "#/$defs/TankControllerDeviceModel"
             }
@@ -264,6 +275,7 @@
           "format": "float"
         }
       },
+      "additionalProperties": false,
       "required": [
         "zoom",
         "draw_grid",
@@ -274,6 +286,10 @@
     "HandleId": {
       "type": "string",
       "pattern": "^[0-9a-z_]+:[0-9a-z_/]+(\\.[0-9a-z_]+)?$"
+    },
+    "PlayerInputsDeviceModel": {
+      "type": "object",
+      "additionalProperties": false
     },
     "TankControllerDeviceModel": {
       "type": "object",
@@ -299,6 +315,7 @@
           "format": "float"
         }
       },
+      "additionalProperties": false,
       "required": [
         "acceleration_force",
         "braking_force",

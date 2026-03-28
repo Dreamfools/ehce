@@ -4,7 +4,6 @@
     activation: "Automatic",
     tank_controller: {
       "acceleration_force": 12,
-      "deceleration_force": 6,
       "braking_force": 1,
       "turn_torgue": 3,
       "max_speed": 12,

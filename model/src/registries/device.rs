@@ -7,6 +7,7 @@ pub mod player_inputs;
 pub mod tank_controller;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
+#[serde(deny_unknown_fields)]
 pub struct DeviceModel {
     #[serde(flatten)]
     pub kind: DeviceKindModel,

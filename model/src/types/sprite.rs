@@ -119,6 +119,7 @@ const _: () = {
                 },
                 {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "sprite": {
                       "type": "string"
@@ -131,6 +132,7 @@ const _: () = {
                 },
                 {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "index": generator.subschema_for::<UVec2Model>(),
                     "tilemap": {
