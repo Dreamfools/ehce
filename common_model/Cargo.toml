@@ -16,6 +16,8 @@ float-ord = { workspace = true }
 bevy_reflect = { workspace = true }
 bevy_color = { workspace = true, features = ["bevy_reflect", "serialize"] }
 registry = { workspace = true }
+serde_json = { workspace = true }
+variadics_please = { workspace = true }
 
 [lints]
 workspace = true

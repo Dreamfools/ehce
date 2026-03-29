@@ -1,0 +1,8 @@
+{
+  device: {
+    id: "core:player_inputs",
+    activation: "Automatic",
+    player_inputs: {},
+    "unique": false
+  }
+}

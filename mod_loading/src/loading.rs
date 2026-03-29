@@ -1,28 +1,37 @@
-use std::any::TypeId;
-use std::ops::{Deref as _, DerefMut as _};
-use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
+use crate::mods::{
+    HotReloadingSystems, ModData, ModLoadErrorMessage, ModLoadedMessage, ModState,
+    WantLoadModMessage,
+};
 use bevy::app::{App, First, Plugin, Update};
 use bevy::diagnostic::FrameCount;
 use bevy::image::Image;
 use bevy::log::{error, info};
-use bevy::prelude::{in_state, Asset, Commands, IntoScheduleConfigs as _, Local, MessageReader, MessageWriter, Messages, NextState, Query, Reflect, Res, ResMut, Resource, Time, Timer, TimerMode, Window};
-use bevy::tasks::{futures, Task};
+use bevy::prelude::{
+    Asset, Commands, IntoScheduleConfigs as _, Local, MessageReader, MessageWriter, Messages,
+    NextState, Query, Reflect, Res, ResMut, Resource, Time, Timer, TimerMode, Window, in_state,
+};
+use bevy::tasks::{Task, futures};
 use bevy_asset::io::{AssetReaderError, AssetSourceBuilder, AssetSourceId};
-use bevy_asset::{AssetApp as _, AssetEvent, AssetServer, Assets, Handle, LoadState, LoadedFolder, UntypedAssetId, UntypedHandle};
-use rootcause::{bail, IntoReport as _};
-use rootcause::prelude::ResultExt as _;
-use rootcause::report_collection::ReportCollection;
-use serde::{Deserialize, Serialize};
+use bevy_asset::{
+    AssetApp as _, AssetEvent, AssetServer, Assets, Handle, LoadState, LoadedFolder,
+    UntypedAssetId, UntypedHandle,
+};
 use bevy_utils::simple_state_object::SimpleStateObjectPlugin;
-use mod_asset_source::{embedded_assets, ModsAssetReader, MODS_FOLDER};
+use mod_asset_source::{MODS_FOLDER, ModsAssetReader, embedded_assets};
 use model::ModModel;
 use registry::path::FieldPath;
 use registry::registry::id::RawId;
 use registry::registry::reflect_registry::BuildReflectRegistry;
+use rootcause::prelude::ResultExt as _;
+use rootcause::report_collection::ReportCollection;
+use rootcause::{IntoReport as _, bail};
+use serde::{Deserialize, Serialize};
+use std::any::TypeId;
+use std::ops::{Deref as _, DerefMut as _};
+use std::path::PathBuf;
+use std::sync::LazyLock;
 use utils::map::{HashMap, HashSet};
 use utils::rootcause_ext::AttachField;
-use crate::mods::{HotReloadingSystems, ModData, ModLoadErrorMessage, ModLoadedMessage, ModState, WantLoadModMessage};
 
 pub static ASSET_READER: LazyLock<ModsAssetReader> = LazyLock::new(|| {
     let ab = ModsAssetReader::new();
@@ -264,49 +273,14 @@ fn loader(
     // db_asset_events.clear();
 
     info!("Mod assets are loaded");
-    let mut db_files = Vec::new();
-    let mut db_images = Vec::new();
-    let asset_type_id = TypeId::of::<DatabaseAsset>();
-    let image_type_id = TypeId::of::<Image>();
-    for (mod_name, handles) in &data.folder_handles {
-        let Some(folder) = folder_assets.get(handles) else {
-            panic!("Mod folder {} disappeared from asset server", mod_name);
-        };
 
-        for handle in &folder.handles {
-            match handle.type_id() {
-                id if id == asset_type_id => {
-                    let Some(item) =
-                        database_items.get(&handle.clone().typed_debug_checked::<DatabaseAsset>())
-                    else {
-                        continue;
-                    };
-                    let Some(path) = asset_path(&asset_server, handle) else {
-                        continue;
-                    };
-
-                    db_files.push((path, item));
-                }
-                id if id == image_type_id
-                    && images.contains(&handle.clone().typed_debug_checked::<Image>()) =>
-                    {
-                        let Some(path) = asset_path(&asset_server, handle) else {
-                            continue;
-                        };
-                        db_images.push((path, handle.clone().typed_debug_checked::<Image>()));
-                    }
-                _ => {
-                    error!(
-                        ?handle,
-                        id=?handle.type_id(),
-                        "Unexpected asset type in mod folder"
-                    );
-                }
-            }
-        }
-    }
-
-    match construct_mod(db_files, db_images) {
+    match construct_mod(
+        data,
+        &folder_assets,
+        &database_items,
+        &images,
+        &asset_server,
+    ) {
         Ok(data) => {
             info!("Mod is constructed, sending events");
             state.set(ModState::Pending);
@@ -416,40 +390,76 @@ fn hot_reload(
     }
 }
 
-fn construct_mod<'a, 'path>(
-    files: impl IntoIterator<Item = (impl AsRef<Path>, &'a DatabaseAsset)>,
-    images: impl IntoIterator<Item = (impl AsRef<Path>, Handle<Image>)>,
+fn construct_mod<'a>(
+    data: &'a LoadingStateData,
+    folder_assets: &'a Assets<LoadedFolder>,
+    database_items: &'a Assets<DatabaseAsset>,
+    images: &'a Assets<Image>,
+    asset_server: &'a AssetServer,
 ) -> rootcause::Result<ModData> {
+    let asset_type_id = TypeId::of::<DatabaseAsset>();
+    let image_type_id = TypeId::of::<Image>();
+
     let mut reg = BuildReflectRegistry::default();
     reg.expect_singletons(ModModel::required_singletons());
 
-    for (path, img) in images {
-        let path: &Path = path.as_ref();
-        let path_lossy = path.to_string_lossy().into_owned();
-        let id = path
-            .file_name()
-            .ok_or_else(|| rootcause::report!("Image path has no file name"))
-            .and_then(|name| {
-                name.to_str()
-                    .ok_or_else(|| rootcause::report!("Image file name is not valid UTF-8"))
-            })
-            .attach_with(|| AttachField("Image path", path_lossy.clone()))?;
+    for (mod_name, handles) in &data.folder_handles {
+        let Some(folder) = folder_assets.get(handles) else {
+            panic!("Mod folder {} disappeared from asset server", mod_name);
+        };
 
-        registry::registry::consume_entry::<Handle<Image>>(
-            &mut reg,
-            &FieldPath::new(&path_lossy),
-            RawId::new(id),
-            img,
-        )
-            .context("Failed to add image to registry")
-            .attach_with(|| AttachField("Image path", path_lossy.clone()))?;
-    }
+        for handle in &folder.handles {
+            match handle.type_id() {
+                id if id == asset_type_id => {
+                    let Some(item) =
+                        database_items.get(&handle.clone().typed_debug_checked::<DatabaseAsset>())
+                    else {
+                        continue;
+                    };
+                    let Some(path) = asset_path(asset_server, handle) else {
+                        continue;
+                    };
 
-    for (path, asset) in files {
-        let path_lossy = path.as_ref().to_string_lossy().into_owned();
-        registry::traverse::traverse(&asset.0, &FieldPath::new(&path_lossy), &mut reg)
-            .context("Failed to traverse mod asset")
-            .attach_with(|| AttachField("Path", path_lossy))?;
+                    let path_lossy = path.to_string_lossy().into_owned();
+                    registry::traverse::traverse(&item.0, &FieldPath::new(&path_lossy), &mut reg)
+                        .context("Failed to traverse mod asset")
+                        .attach_with(|| AttachField("Path", path_lossy))?;
+                }
+                id if id == image_type_id
+                    && images.contains(&handle.clone().typed_debug_checked::<Image>()) =>
+                {
+                    let Some(path) = asset_path(asset_server, handle) else {
+                        continue;
+                    };
+                    let path_lossy = path.to_string_lossy().into_owned();
+                    let name = path
+                        .file_stem()
+                        .ok_or_else(|| rootcause::report!("Image path has no file name"))
+                        .and_then(|name| {
+                            name.to_str().ok_or_else(|| {
+                                rootcause::report!("Image file name is not valid UTF-8")
+                            })
+                        })
+                        .attach_with(|| AttachField("Image path", path_lossy.clone()))?;
+
+                    registry::registry::consume_entry::<Handle<Image>>(
+                        &mut reg,
+                        &FieldPath::new(&path_lossy),
+                        RawId::new(format!("{}:{}", mod_name, name)),
+                        handle.clone().typed_debug_checked::<Image>(),
+                    )
+                    .context("Failed to add image to registry")
+                    .attach_with(|| AttachField("Image path", path_lossy.clone()))?;
+                }
+                _ => {
+                    error!(
+                        ?handle,
+                        id=?handle.type_id(),
+                        "Unexpected asset type in mod folder"
+                    );
+                }
+            }
+        }
     }
 
     let registry = reg.build().into_report()?;

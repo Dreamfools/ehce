@@ -1,0 +1,14 @@
+{
+  device: {
+    id: "base:tank_controller",
+    activation: "Automatic",
+    tank_controller: {
+      "acceleration_force": 12,
+      "braking_force": 1,
+      "turn_torgue": 3,
+      "max_speed": 12,
+      "max_angular_speed": 6
+    },
+    "unique": false
+  }
+}

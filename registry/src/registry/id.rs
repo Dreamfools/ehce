@@ -1,13 +1,19 @@
+use crate::registry::id::lexing::{Namespace, path_errors};
 use crate::traverse::TraverseKind;
 use bevy_reflect::{Reflect, TypePath};
+use itertools::Itertools as _;
+use rootcause::{bail, report};
+use schemars::_private::serde_json;
 use schemars::{JsonSchema, Schema, SchemaGenerator};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::str::FromStr;
 use ustr::Ustr;
+
+mod lexing;
 
 #[derive(Reflect)]
 #[reflect(@TraverseKind::IdRef)]
@@ -15,7 +21,7 @@ use ustr::Ustr;
 pub struct IdRef<T> {
     id: RawId,
     #[reflect(ignore)]
-    _t: PhantomData<T>,
+    _t: PhantomData<fn() -> T>,
 }
 
 impl<T> IdRef<T> {
@@ -73,6 +79,12 @@ impl<T> Clone for IdRef<T> {
     }
 }
 
+impl<T> Display for IdRef<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.id.fmt(f)
+    }
+}
+
 impl<T: TypePath> JsonSchema for IdRef<T> {
     fn inline_schema() -> bool {
         false
@@ -91,7 +103,13 @@ impl<T: TypePath> JsonSchema for IdRef<T> {
     }
 
     fn json_schema(generator: &mut SchemaGenerator) -> Schema {
-        String::json_schema(generator)
+        let mut schema = String::json_schema(generator);
+        schema.insert(
+            "pattern".to_string(),
+            serde_json::json!("^[0-9a-z_]+:[0-9a-z_/]+$"),
+        );
+
+        schema
     }
 }
 
@@ -117,16 +135,20 @@ impl<'de, T> Deserialize<'de> for IdRef<T> {
     }
 }
 
-#[derive(
-    Debug, Copy, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Deserialize, Reflect,
-)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Reflect)]
 #[serde(transparent)]
 #[reflect(opaque, Clone)]
 pub struct RawId(pub(crate) Ustr);
 
 impl RawId {
     pub fn new(id: impl Into<Ustr>) -> Self {
-        Self(id.into())
+        let id = id.into();
+        Self::from_str(id.as_str()).expect("All directly constructed raw ids must be valid")
+    }
+
+    pub fn try_new(id: impl Into<Ustr>) -> rootcause::Result<Self> {
+        let id = id.into();
+        Self::from_str(id.as_str())
     }
 
     #[must_use]
@@ -136,10 +158,29 @@ impl RawId {
 }
 
 impl FromStr for RawId {
-    type Err = std::string::ParseError;
+    type Err = rootcause::Report;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(Ustr::from_str(s)?))
+    fn from_str(data: &str) -> Result<Self, Self::Err> {
+        let (namespace, path): (&str, &str) = data
+            .split(':')
+            .collect_tuple()
+            .ok_or_else(|| report!("ID must be in a form of `namespace:path`"))?;
+
+        let namespace = Namespace::from_str(namespace)?;
+
+        if path.is_empty() {
+            bail!("ID can't be empty");
+        }
+
+        if let Some((i, c)) = path_errors(path) {
+            bail!(
+                "Invalid symbol `{}` in ID, at position {}",
+                c,
+                i + namespace.as_ref().len() + 1
+            );
+        }
+
+        Ok(Self(data.into()))
     }
 }
 
@@ -157,6 +198,22 @@ impl JsonSchema for RawId {
     }
 
     fn json_schema(generator: &mut SchemaGenerator) -> Schema {
-        String::json_schema(generator)
+        let mut schema = String::json_schema(generator);
+        schema.insert(
+            "pattern".to_string(),
+            serde_json::json!("^[0-9a-z_]+:[0-9a-z_/]+$"),
+        );
+
+        schema
+    }
+}
+
+impl<'de> Deserialize<'de> for RawId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let str = String::deserialize(deserializer)?;
+        Self::from_str(&str).map_err(serde::de::Error::custom)
     }
 }

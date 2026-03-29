@@ -5,7 +5,7 @@ use typenum::{B1, Const, IsGreater, IsLessOrEqual, ToUInt, U0, Unsigned};
 pub type SmallIndex<const LIMIT: usize> = U8Index<<Const<LIMIT> as ToUInt>::Output>;
 
 #[repr(transparent)]
-pub struct U8Index<LIMIT: Unsigned>(u8, PhantomData<LIMIT>);
+pub struct U8Index<LIMIT: Unsigned>(u8, PhantomData<fn() -> LIMIT>);
 
 impl<LIMIT: Unsigned> U8Index<LIMIT> {
     #[must_use]

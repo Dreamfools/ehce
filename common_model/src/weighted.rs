@@ -68,7 +68,7 @@ const _: () = {
             D: Deserializer<'de>,
         {
             struct WeightedVisitor<T> {
-                marker: std::marker::PhantomData<T>,
+                marker: std::marker::PhantomData<fn() -> T>,
             }
 
             impl<'de, T: Deserialize<'de>> Visitor<'de> for WeightedVisitor<T> {
@@ -137,7 +137,7 @@ const _: () = {
             D: Deserializer<'de>,
         {
             struct WeightedCollectionVisitor<T> {
-                marker: std::marker::PhantomData<T>,
+                marker: std::marker::PhantomData<fn() -> T>,
             }
 
             impl<'de, T: Deserialize<'de>> Visitor<'de> for WeightedCollectionVisitor<T> {

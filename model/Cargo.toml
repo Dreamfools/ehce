@@ -12,6 +12,9 @@ bevy_reflect = { workspace = true, features = ["reflect_documentation"] }
 registry = { workspace = true }
 bevy_asset = { workspace = true, default-features = false }
 bevy_image = { workspace = true, default-features = false }
+exmex = { workspace = true }
+rootcause = { workspace = true }
+utils = { workspace = true }
 
 [lints]
 workspace = true

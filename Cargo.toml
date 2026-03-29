@@ -42,6 +42,9 @@ ustr = "1.1.0"
 wayland-sys = { version = "0.31.8" }
 web-fs = "0.2.9"
 weighted_rand = { git = "https://github.com/bionicles/weighted_rand.git", rev = "7997c56cc1ccb8c426c3dba127b0e2cfd0b71e51" }
+exmex = "0.20.5"
+variadics_please = "1.1.0"
+logos = "0.16.1"
 
 # Workspace dependencies
 utils = { path = "utils" }
@@ -52,6 +55,7 @@ model = { path = "model" }
 mod_asset_source = { path = "mod_asset_source" }
 mod_loading = { path = "mod_loading" }
 bevy_utils = { path = "bevy_utils" }
+
 
 [workspace.lints.rust]
 # Mark `bevy_lint` as a valid `cfg`, as it is set when the Bevy linter runs.

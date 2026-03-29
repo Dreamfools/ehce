@@ -1,5 +1,5 @@
 {
-  "GameSetting": {
+  "game_setting": {
     "zoom": 1,
     "draw_grid": true,
     "grid_color": "#FF0000",

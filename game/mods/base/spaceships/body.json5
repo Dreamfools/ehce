@@ -1,0 +1,8 @@
+{
+  "unit_definition": {
+    "id": "base:scout",
+    "weight": "5 * {core:cells_count}",
+    "preset_variables": {},
+    "builtin_devices": ["base:tank_controller"]
+  }
+}

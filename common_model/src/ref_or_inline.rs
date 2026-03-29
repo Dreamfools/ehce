@@ -59,7 +59,7 @@ const _: () = {
             D: Deserializer<'de>,
         {
             struct RefOrInlineVisitor<T> {
-                marker: std::marker::PhantomData<T>,
+                marker: std::marker::PhantomData<fn() -> T>,
             }
 
             impl<'de, T: Deserialize<'de>> Visitor<'de> for RefOrInlineVisitor<T> {

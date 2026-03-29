@@ -1,0 +1,7 @@
+{
+  "unit_variable": {
+    id: "core:cells_count",
+    "default_value": 0,
+    "readonly": true
+  }
+}

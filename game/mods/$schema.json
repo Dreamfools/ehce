@@ -5,29 +5,72 @@
     {
       "type": "object",
       "properties": {
-        "Spaceship": {
+        "spaceship": {
           "$ref": "#/$defs/Entry%3CSpaceshipModel%3E"
         }
       },
       "additionalProperties": false,
       "required": [
-        "Spaceship"
+        "spaceship"
       ]
     },
     {
       "type": "object",
       "properties": {
-        "GameSetting": {
+        "device": {
+          "$ref": "#/$defs/Entry%3CDeviceModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "device"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "unit_definition": {
+          "$ref": "#/$defs/Entry%3CUnitDefinitionModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unit_definition"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "unit_variable": {
+          "$ref": "#/$defs/Entry%3CUnitVariableModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "unit_variable"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "game_setting": {
           "$ref": "#/$defs/GameSettings"
         }
       },
       "additionalProperties": false,
       "required": [
-        "GameSetting"
+        "game_setting"
       ]
     }
   ],
   "$defs": {
+    "ActivationMode": {
+      "type": "string",
+      "enum": [
+        "Automatic",
+        "Manual"
+      ]
+    },
     "ColorDataSerialized": {
       "anyOf": [
         {
@@ -74,14 +117,60 @@
     "ColorModel": {
       "$ref": "#/$defs/ColorDataSerialized"
     },
+    "DeviceModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+    },
+    "Entry<DeviceModel>": {
+      "type": "object",
+      "properties": {
+        "activation": {
+          "$ref": "#/$defs/ActivationMode"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "unique": {
+          "type": "boolean"
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "player_inputs": {
+              "$ref": "#/$defs/PlayerInputsDeviceModel"
+            }
+          },
+          "required": [
+            "player_inputs"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tank_controller": {
+              "$ref": "#/$defs/TankControllerDeviceModel"
+            }
+          },
+          "required": [
+            "tank_controller"
+          ]
+        }
+      ],
+      "required": [
+        "id",
+        "activation",
+        "unique"
+      ]
+    },
     "Entry<SpaceshipModel>": {
       "type": "object",
       "properties": {
-        "controller": {
-          "$ref": "#/$defs/TankControllerModel"
-        },
         "id": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
         },
         "model_size": {
           "type": "number",
@@ -89,13 +178,87 @@
         },
         "sprite": {
           "$ref": "#/$defs/HandleId"
+        },
+        "unit": {
+          "$ref": "#/$defs/UnitDefinitionModelId"
         }
       },
       "required": [
         "id",
         "sprite",
         "model_size",
-        "controller"
+        "unit"
+      ]
+    },
+    "Entry<UnitDefinitionModel>": {
+      "type": "object",
+      "properties": {
+        "builtin_devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DeviceModelId"
+          }
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "preset_variables": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[0-9a-z_]+:[0-9a-z_/]+$": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        "weight": {
+          "$ref": "#/$defs/Formula"
+        }
+      },
+      "required": [
+        "id",
+        "weight",
+        "preset_variables",
+        "builtin_devices"
+      ]
+    },
+    "Entry<UnitVariableModel>": {
+      "type": "object",
+      "properties": {
+        "default_value": {
+          "description": "The default value of the variable",
+          "type": "number",
+          "format": "double"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "readonly": {
+          "description": "Whether the variable is read-only (cannot be modified after being initialized)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "default_value",
+        "readonly"
+      ]
+    },
+    "Formula": {
+      "description": "fn() -> f64\nIds refer to unit variables by default",
+      "anyOf": [
+        {
+          "description": "A formula string, e.g. \"2 * x + 1\"",
+          "type": "string"
+        },
+        {
+          "description": "A constant number, e.g. 3.14",
+          "type": "number",
+          "format": "double"
+        }
       ]
     },
     "GameSettings": {
@@ -116,6 +279,7 @@
           "format": "float"
         }
       },
+      "additionalProperties": false,
       "required": [
         "zoom",
         "draw_grid",
@@ -124,9 +288,14 @@
       ]
     },
     "HandleId": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     },
-    "TankControllerModel": {
+    "PlayerInputsDeviceModel": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "TankControllerDeviceModel": {
       "type": "object",
       "properties": {
         "acceleration_force": {
@@ -134,10 +303,6 @@
           "format": "float"
         },
         "braking_force": {
-          "type": "number",
-          "format": "float"
-        },
-        "deceleration_force": {
           "type": "number",
           "format": "float"
         },
@@ -154,14 +319,18 @@
           "format": "float"
         }
       },
+      "additionalProperties": false,
       "required": [
         "acceleration_force",
-        "deceleration_force",
         "braking_force",
         "turn_torgue",
         "max_speed",
         "max_angular_speed"
       ]
+    },
+    "UnitDefinitionModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     }
   }
 }
