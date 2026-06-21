@@ -23,7 +23,7 @@ pub mod formula_executor;
 
 #[derive(Reflect)]
 pub enum FormulaModel<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> {
-    Expr(Arc<ExprWithArgs<ARGS, CTX>>),
+    Expr(ExprWithArgs<ARGS, CTX>),
     Const(f64),
 }
 
@@ -49,7 +49,7 @@ impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> FormulaModel<ARGS, 
 #[reflect(Clone)]
 pub struct ExprWithArgs<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> {
     #[reflect(ignore, default = "default_expr")]
-    pub expr: exmex::FlatEx<f64>,
+    pub expr: Arc<exmex::FlatEx<f64>>,
     pub args: Vec<FormulaVariable>,
     #[reflect(ignore)]
     _c: PhantomData<fn() -> (ARGS, CTX)>,
@@ -180,9 +180,9 @@ impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Clone for ExprWithA
     }
 }
 
-fn default_expr() -> exmex::FlatEx<f64> {
-    static DEFAULT_EXPR: LazyLock<exmex::FlatEx<f64>> =
-        LazyLock::new(|| exmex::FlatEx::parse("0").unwrap());
+fn default_expr() -> Arc<exmex::FlatEx<f64>> {
+    static DEFAULT_EXPR: LazyLock<Arc<exmex::FlatEx<f64>>> =
+        LazyLock::new(|| Arc::new(exmex::FlatEx::parse("0").unwrap()));
     DEFAULT_EXPR.clone()
 }
 
@@ -284,11 +284,13 @@ const _: () = {
                         })?);
                     }
 
-                    Ok(FormulaModel::Expr(Arc::new(ExprWithArgs {
-                        expr: formula,
-                        args,
-                        _c: PhantomData,
-                    })))
+                    Ok(FormulaModel::Expr(
+                        (ExprWithArgs {
+                            expr: Arc::new(formula),
+                            args,
+                            _c: PhantomData,
+                        }),
+                    ))
                 }
             }
 
