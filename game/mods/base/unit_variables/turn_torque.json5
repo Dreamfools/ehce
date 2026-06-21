@@ -1,0 +1,7 @@
+{
+  "unit_variable": {
+    id: "base:turn_torque",
+    "default_value": 0,
+    "readonly": false
+  }
+}

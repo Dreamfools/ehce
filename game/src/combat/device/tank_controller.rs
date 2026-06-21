@@ -16,7 +16,7 @@ use model::types::formula::formula_context::UnitFormulaModel;
 pub struct PhysicsTankController {
     pub acceleration_force: UnitFormulaModel,
     pub braking_force: UnitFormulaModel,
-    pub turn_torgue: UnitFormulaModel,
+    pub turn_torque: UnitFormulaModel,
     pub max_speed: UnitFormulaModel,
     pub max_angular_speed: UnitFormulaModel,
 }
@@ -29,7 +29,7 @@ impl PhysicsTankController {
         Self {
             acceleration_force: device.acceleration_force.clone(),
             braking_force: device.braking_force.clone(),
-            turn_torgue: device.turn_torgue.clone(),
+            turn_torque: device.turn_torque.clone(),
             max_speed: device.max_speed.clone(),
             max_angular_speed: device.max_angular_speed.clone(),
         }
@@ -75,8 +75,8 @@ pub(super) fn tank_controller_update(
 
         let exec = vars.executor(&ctx);
 
-        let torgue =
-            controller.turn_torgue.eval_f32(&exec, ())? * angular_inertia.inverse() * 1000.0;
+        let torque =
+            controller.turn_torque.eval_f32(&exec, ())? * angular_inertia.inverse() * 1000.0;
 
         let ship_direction = transform.right().truncate();
 
@@ -102,7 +102,7 @@ pub(super) fn tank_controller_update(
                     } else {
                         let distance = distance_traveled(
                             angular_velocity.0,
-                            torgue + angular_damping.map_or(0.0, |d| d.0),
+                            torque + angular_damping.map_or(0.0, |d| d.0),
                         );
                         if (distance - turn_angle.abs()) > std::f32::consts::PI / 180.0 {
                             // start braking
@@ -111,7 +111,7 @@ pub(super) fn tank_controller_update(
                             // continue accelerating in the same direction
 
                             // how much do we need to turn to get to the desired direction in one tick?
-                            let turn_to_achieve = turn_angle / (torgue * dt);
+                            let turn_to_achieve = turn_angle / (torque * dt);
 
                             want_turn = turn_to_achieve.clamp(-1.0, 1.0);
                         }
@@ -128,11 +128,11 @@ pub(super) fn tank_controller_update(
             {
                 // already at max speed
             } else {
-                angular_velocity.0 += want_turn * torgue * dt;
+                angular_velocity.0 += want_turn * torque * dt;
             }
         } else if angular_velocity.0 != 0.0 {
             // damp rotation when not turning
-            let damping = torgue * dt;
+            let damping = torque * dt;
             if angular_velocity.0.abs() <= damping {
                 angular_velocity.0 = 0.0;
             } else {

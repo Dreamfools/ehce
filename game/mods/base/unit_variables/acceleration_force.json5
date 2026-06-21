@@ -1,0 +1,7 @@
+{
+  "unit_variable": {
+    id: "base:acceleration_force",
+    "default_value": 0,
+    "readonly": false
+  }
+}

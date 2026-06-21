@@ -1,0 +1,7 @@
+{
+  "unit_variable": {
+    id: "base:max_speed",
+    "default_value": 0,
+    "readonly": false
+  }
+}

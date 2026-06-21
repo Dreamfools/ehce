@@ -321,7 +321,7 @@
         "max_speed": {
           "$ref": "#/$defs/Formula"
         },
-        "turn_torgue": {
+        "turn_torque": {
           "$ref": "#/$defs/Formula"
         }
       },
@@ -329,7 +329,7 @@
       "required": [
         "acceleration_force",
         "braking_force",
-        "turn_torgue",
+        "turn_torque",
         "max_speed",
         "max_angular_speed"
       ]

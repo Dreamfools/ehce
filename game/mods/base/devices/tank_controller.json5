@@ -3,11 +3,11 @@
     id: "base:tank_controller",
     activation: "Automatic",
     tank_controller: {
-      "acceleration_force": 12,
-      "braking_force": 1,
-      "turn_torgue": 3,
-      "max_speed": 12,
-      "max_angular_speed": 6
+      "acceleration_force": "{base:acceleration_force}",
+      "braking_force": "{base:braking_force",
+      "turn_torque": "{base:turn_torque",
+      "max_speed": "{base:max_speed}",
+      "max_angular_speed": "{base:max_angular_speed}"
     },
     "unique": false
   }

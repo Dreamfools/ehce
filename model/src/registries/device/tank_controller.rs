@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct TankControllerDeviceModel {
     pub acceleration_force: UnitFormulaModel,
     pub braking_force: UnitFormulaModel,
-    pub turn_torgue: UnitFormulaModel,
+    pub turn_torque: UnitFormulaModel,
     pub max_speed: UnitFormulaModel,
     pub max_angular_speed: UnitFormulaModel,
 }
