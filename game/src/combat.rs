@@ -23,6 +23,7 @@ impl Plugin for CombatPlugin {
         app.init_schedule(CombatUpdate);
         app.init_schedule(CombatPostUpdate);
         app.init_schedule(CombatPhysicsUpdate);
+        app.init_schedule(CombatVariablesUpdate);
 
         #[cfg_attr(bevy_lint, allow(bevy::panicking_methods))]
         // fixed schedule should exist for combat to work
@@ -56,6 +57,7 @@ fn update_combat_schedules(world: &mut World) {
     world.run_schedule(CombatInputs);
     world.run_schedule(CombatUpdate);
     world.run_schedule(CombatPostUpdate);
+    world.run_schedule(CombatVariablesUpdate);
 }
 
 /// Schedule for processing combat physics
@@ -70,3 +72,6 @@ struct CombatUpdate;
 /// Schedule for processing events emitted in the combat update stage, and doing any necessary updates
 #[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
 struct CombatPostUpdate;
+/// Schedule specifically for updating all variables
+#[derive(ScheduleLabel, Debug, Hash, PartialEq, Eq, Clone)]
+struct CombatVariablesUpdate;

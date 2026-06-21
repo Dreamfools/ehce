@@ -17,7 +17,7 @@ use model::registries::device::{DeviceKindModel, DeviceModel};
 use model::registries::spaceship::SpaceshipModel;
 use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
-use utils::map::HashSet;
+use utils::map::{HashMap, HashSet};
 
 pub struct SpawningPlugin;
 
@@ -58,6 +58,17 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
     let mut sprite = Sprite::from_image(reg[ship.sprite].clone());
     sprite.custom_size = Some(Vec2::splat(1.0));
 
+    let unit_def = &reg[ship.unit];
+
+    let mut vars = HashMap::default();
+    for (id, value) in unit_def
+        .preset_variables
+        .iter()
+        .chain(ship.preset_variables.iter())
+    {
+        vars.insert(*id, *value);
+    }
+
     let mut entity = commands.spawn((
         Name::new(msg.id.to_string()),
         RigidBody::Dynamic,
@@ -66,11 +77,9 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         Transform::from_xyz(msg.position.x, msg.position.y, 0.0),
         sprite,
         UnitSignals::bundle(),
-        UnitVariables::default(),
+        UnitVariables::new(reg, &vars),
         Mass(1.0),
     ));
-
-    let unit_def = &reg[ship.unit];
 
     // TODO: store these active devices in a component?
     let mut active_devices = Default::default();

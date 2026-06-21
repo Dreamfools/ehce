@@ -1,5 +1,8 @@
+use crate::combat::{CombatInputs, CombatVariablesUpdate};
+use bevy::app::{App, Plugin};
 use bevy::ecs::system::SystemParam;
-use bevy::prelude::{Component, Reflect, Res};
+use bevy::log::error;
+use bevy::prelude::{Component, Query, Reflect, Res};
 use mod_loading::mods::ModData;
 use model::registries::variable::UnitVariableModel;
 use model::types::formula::formula_context::UnitFormulaContext;
@@ -9,7 +12,26 @@ use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
 use utils::map::HashMap;
 
+pub struct UnitVariablesPlugin;
+
+impl Plugin for UnitVariablesPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(CombatVariablesUpdate, sys_progress_variables);
+    }
+}
+
+fn sys_progress_variables(
+    mod_data: Res<ModData>,
+    query: Query<(&mut UnitVariables, &mut UnitVariablesChanges)>,
+) {
+    for (mut vars, mut write) in query {
+        for (id, add) in write.unit.drain() {
+            vars.add(&mod_data.registry, id, add);
+        }
+    }
+}
 #[derive(Debug, Clone, Default, Reflect, Component)]
+#[require(UnitVariablesChanges)]
 pub struct UnitVariables {
     vars: HashMap<IdRef<UnitVariableModel>, VarData>,
 }
@@ -21,6 +43,22 @@ struct VarData {
 }
 
 impl UnitVariables {
+    /// Creates a new [UnitVariables] with the given preset values
+    pub fn new(reg: &ReflectRegistry, preset: &HashMap<IdRef<UnitVariableModel>, f64>) -> Self {
+        let mut vars = HashMap::default();
+        for (id, value) in preset {
+            let var = &reg[*id];
+            vars.insert(
+                *id,
+                VarData {
+                    value: *value,
+                    readonly: var.readonly,
+                },
+            );
+        }
+        Self { vars }
+    }
+
     #[must_use]
     pub fn get(&self, reg: &ReflectRegistry, id: IdRef<UnitVariableModel>) -> f64 {
         if let Some(var) = self.vars.get(&id) {
@@ -38,6 +76,27 @@ impl UnitVariables {
     ) -> UnitFormulaExecutor<'a, 'w> {
         UnitFormulaExecutor { vars: self, ctx }
     }
+
+    fn add(&mut self, reg: &ReflectRegistry, id: IdRef<UnitVariableModel>, value: f64) {
+        let entry = self.vars.entry(id).or_insert_with(|| {
+            let var = &reg[id];
+            VarData {
+                value: var.default_value,
+                readonly: var.readonly,
+            }
+        });
+
+        if entry.readonly {
+            error!("Attempted to modify readonly variable {}. Ignoring.", id);
+        } else {
+            entry.value += value;
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Reflect, Component)]
+struct UnitVariablesChanges {
+    unit: HashMap<IdRef<UnitVariableModel>, f64>,
 }
 
 #[derive(SystemParam)]

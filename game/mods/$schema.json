@@ -176,6 +176,17 @@
           "type": "number",
           "format": "float"
         },
+        "preset_variables": {
+          "type": "object",
+          "additionalProperties": false,
+          "default": {},
+          "patternProperties": {
+            "^[0-9a-z_]+:[0-9a-z_/]+$": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
         "sprite": {
           "$ref": "#/$defs/HandleId"
         },
