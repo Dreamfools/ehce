@@ -1,6 +1,6 @@
 use crate::combat::CombatPostUpdate;
 use bevy::app::{App, Plugin};
-use bevy::prelude::{Component, Entity};
+use bevy::prelude::{Component, Entity, Reflect};
 
 pub mod tank_controller;
 
@@ -12,7 +12,7 @@ impl Plugin for DevicePlugin {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 #[relationship(relationship_target = AttachedDevices)]
 pub struct DeviceOf(Entity);
 
@@ -23,6 +23,6 @@ impl DeviceOf {
     }
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Reflect)]
 #[relationship_target(relationship = DeviceOf, linked_spawn)]
 pub struct AttachedDevices(Vec<Entity>);

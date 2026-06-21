@@ -1,5 +1,6 @@
 use crate::combat::device::DeviceOf;
 use crate::combat::signals::{SignalId, SignalValue, UnitSignals};
+use crate::combat::unit_variables::{CombatFormulaContext, UnitVariables};
 use crate::ecs_tools::component_invariants;
 use avian2d::prelude::{
     AngularDamping, AngularVelocity, ComputedAngularInertia, ComputedMass, LinearVelocity,
@@ -9,14 +10,15 @@ use bevy::math::Vec2;
 use bevy::prelude::{Component, Query, Reflect, Res, Transform};
 use bevy::time::{Fixed, Time};
 use model::registries::device::tank_controller::TankControllerDeviceModel;
+use model::types::formula::formula_context::UnitFormulaModel;
 
 #[derive(Debug, Clone, Reflect, Component)]
 pub struct PhysicsTankController {
-    pub acceleration_force: f32,
-    pub braking_force: f32,
-    pub turn_torgue: f32,
-    pub max_speed: f32,
-    pub max_angular_speed: f32,
+    pub acceleration_force: UnitFormulaModel,
+    pub braking_force: UnitFormulaModel,
+    pub turn_torgue: UnitFormulaModel,
+    pub max_speed: UnitFormulaModel,
+    pub max_angular_speed: UnitFormulaModel,
 }
 
 component_invariants!(PhysicsTankController : RigidBody, ControllerInputs);
@@ -25,11 +27,11 @@ impl PhysicsTankController {
     #[must_use]
     pub fn from_device(device: &TankControllerDeviceModel) -> PhysicsTankController {
         Self {
-            acceleration_force: device.acceleration_force,
-            braking_force: device.braking_force,
-            turn_torgue: device.turn_torgue,
-            max_speed: device.max_speed,
-            max_angular_speed: device.max_angular_speed,
+            acceleration_force: device.acceleration_force.clone(),
+            braking_force: device.braking_force.clone(),
+            turn_torgue: device.turn_torgue.clone(),
+            max_speed: device.max_speed.clone(),
+            max_angular_speed: device.max_angular_speed.clone(),
         }
     }
 }
@@ -37,9 +39,11 @@ impl PhysicsTankController {
 pub(super) fn tank_controller_update(
     fixed_time: Res<Time<Fixed>>,
     device: Query<(&DeviceOf, &PhysicsTankController)>,
+    ctx: CombatFormulaContext<'_>,
     mut q: Query<(
         &Transform,
-        &UnitSignals,
+        UnitSignals,
+        &UnitVariables,
         &ComputedMass,
         &ComputedAngularInertia,
         &RigidBody,
@@ -47,12 +51,13 @@ pub(super) fn tank_controller_update(
         &mut AngularVelocity,
         Option<&AngularDamping>,
     )>,
-) {
+) -> bevy::prelude::Result {
     let dt = fixed_time.delta_secs();
     for (device_of, controller) in device {
         let Ok((
             transform,
             inputs,
+            vars,
             mass,
             angular_inertia,
             rb,
@@ -68,7 +73,10 @@ pub(super) fn tank_controller_update(
             continue;
         }
 
-        let torgue = controller.turn_torgue * angular_inertia.inverse() * 1000.0;
+        let exec = vars.executor(&ctx);
+
+        let torgue =
+            controller.turn_torgue.eval_f32(&exec, ())? * angular_inertia.inverse() * 1000.0;
 
         let ship_direction = transform.right().truncate();
 
@@ -116,7 +124,7 @@ pub(super) fn tank_controller_update(
 
         if want_turn != 0.0 {
             if angular_velocity.0.signum() == want_turn.signum()
-                && angular_velocity.abs() >= controller.max_angular_speed
+                && angular_velocity.abs() >= controller.max_angular_speed.eval_f32(&exec, ())?
             {
                 // already at max speed
             } else {
@@ -137,14 +145,16 @@ pub(super) fn tank_controller_update(
         let brake = -movement.clamp(-1.0, 0.0);
 
         if throttle > 0.0 {
-            let acceleration =
-                controller.acceleration_force * mass.inverse() * throttle * dt * ship_direction;
+            let acceleration = controller.acceleration_force.eval_f32(&exec, ())?
+                * mass.inverse()
+                * throttle
+                * dt
+                * ship_direction;
             let new_velocity = linear_velocity.0 + acceleration;
             let velocity_l2 = linear_velocity.length_squared();
             let new_velocity_l2 = new_velocity.length_squared();
-            if new_velocity_l2 > controller.max_speed * controller.max_speed
-                && new_velocity_l2 > velocity_l2
-            {
+            let max_speed = controller.max_speed.eval_f32(&exec, ())?;
+            if new_velocity_l2 > max_speed * max_speed && new_velocity_l2 > velocity_l2 {
                 // When exceeding the speed limit, add some speed in the direction but reduce overall velocity to maintain the same speed
                 let acceleration_factor = (velocity_l2 / new_velocity_l2).sqrt();
                 linear_velocity.0 = new_velocity * acceleration_factor;
@@ -154,7 +164,8 @@ pub(super) fn tank_controller_update(
         }
 
         if brake > 0.0 {
-            let brake_force = controller.braking_force * mass.inverse() * brake * dt;
+            let brake_force =
+                controller.braking_force.eval_f32(&exec, ())? * mass.inverse() * brake * dt;
             if linear_velocity.length_squared() <= brake_force * brake_force {
                 linear_velocity.0 = Vec2::ZERO;
             } else {
@@ -163,6 +174,8 @@ pub(super) fn tank_controller_update(
             }
         }
     }
+
+    Ok(())
 }
 
 /// Distance traveled until stop when decelerating from `speed` with `deceleration`.

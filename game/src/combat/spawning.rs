@@ -3,6 +3,7 @@ use crate::combat::device::DeviceOf;
 use crate::combat::device::tank_controller::PhysicsTankController;
 use crate::combat::signals::UnitSignals;
 use crate::combat::signals::inputs::PlayerBehavior;
+use crate::combat::unit_variables::UnitVariables;
 use avian2d::interpolation::TransformInterpolation;
 use avian2d::prelude::{Collider, Mass, RigidBody};
 use bevy::app::{App, Plugin};
@@ -64,7 +65,8 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         TransformInterpolation,
         Transform::from_xyz(msg.position.x, msg.position.y, 0.0),
         sprite,
-        UnitSignals::default(),
+        UnitSignals::bundle(),
+        UnitVariables::default(),
         Mass(1.0),
     ));
 

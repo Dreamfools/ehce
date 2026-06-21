@@ -1,9 +1,12 @@
-use crate::combat::CombatPostUpdate;
+use crate::combat::CombatInputs;
 use crate::combat::signals::inputs::update_player_behavior;
 use bevy::app::{App, Plugin};
+use bevy::ecs::query::QueryData;
 use bevy::math::{FloatOrd, Vec2};
-use bevy::prelude::{Component, IntoScheduleConfigs as _, Query, Reflect};
+use bevy::prelude::{Bundle, Component, IntoScheduleConfigs as _, Query, Reflect};
+use std::collections::hash_map::Entry;
 use std::hash::Hash;
+use std::ops::Add;
 use utils::map::{HashMap, HashSet};
 
 pub mod inputs;
@@ -13,83 +16,87 @@ pub struct SignalsPlugin;
 impl Plugin for SignalsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            CombatPostUpdate,
-            (sys_progress_signals, update_player_behavior).chain(),
+            CombatInputs,
+            (update_player_behavior, sys_progress_signals).chain(),
         );
     }
 }
 
-fn sys_progress_signals(signals: Query<&mut UnitSignals>) {
+fn sys_progress_signals(signals: Query<&mut UnitSignalsData>) {
     for mut signals in signals {
         signals.tick();
     }
 }
 
-#[derive(Debug, Clone, Default, Reflect, Component)]
+#[derive(QueryData)]
 pub struct UnitSignals {
+    data: &'static UnitSignalsData,
+}
+
+impl UnitSignals {
+    #[must_use]
+    pub fn bundle() -> impl Bundle {
+        UnitSignalsData::default()
+    }
+}
+
+impl UnitSignalsItem<'_, '_> {
+    /// Gets the value of a signal, or `Off` if it is not set
+    #[must_use]
+    pub fn get(&self, id: SignalId) -> SignalValue {
+        self.data
+            .signals
+            .get(&id)
+            .copied()
+            .unwrap_or(SignalValue::Off)
+    }
+
+    /// Checks if a signal was changed since the last tick
+    #[must_use]
+    pub fn is_changed(&self, id: &SignalId) -> bool {
+        self.data.changed.contains(id)
+    }
+
+    /// Checks if a signal was `Off` the last tick and is now set
+    #[must_use]
+    pub fn is_rising_edge(&self, id: &SignalId) -> bool {
+        self.data.rising_edge.contains(id)
+    }
+
+    /// Checks if a signal was set the last tick and is now `Off`
+    #[must_use]
+    pub fn is_falling_edge(&self, id: &SignalId) -> bool {
+        self.data.falling_edge.contains(id)
+    }
+}
+
+#[derive(Debug, Clone, Default, Reflect, Component)]
+struct UnitSignalsData {
     signals: HashMap<SignalId, SignalValue>,
+    next: HashMap<SignalId, SignalValue>,
+
+    buf: HashMap<SignalId, SignalValue>,
 
     rising_edge: HashSet<SignalId>,
     falling_edge: HashSet<SignalId>,
     changed: HashSet<SignalId>,
 }
 
-impl UnitSignals {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Sets a signal to the given value. If the value is `Off` or zero, the signal is unset
-    pub fn set(&mut self, id: SignalId, value: SignalValue) {
+impl UnitSignalsData {
+    /// Adds the signal to the next set of signals. Active signals should be added every frame
+    fn add_next(&mut self, id: SignalId, value: SignalValue) {
         if value.is_zero() {
-            self.unset(id);
             return;
         }
-
-        match self.signals.insert(id, value) {
-            None => {
-                self.rising_edge.insert(id);
-                self.changed.insert(id);
+        match self.next.entry(id) {
+            Entry::Occupied(mut e) => {
+                let sum = e.get() + &value;
+                e.insert(sum);
             }
-            Some(old) => {
-                if old != value {
-                    self.changed.insert(id);
-                }
+            Entry::Vacant(e) => {
+                e.insert(value);
             }
         }
-    }
-
-    /// Unsets a signal
-    pub fn unset(&mut self, id: SignalId) {
-        if self.signals.remove(&id).is_some() {
-            self.changed.insert(id);
-            self.falling_edge.insert(id);
-        }
-    }
-
-    /// Gets the value of a signal, or `Off` if it is not set
-    #[must_use]
-    pub fn get(&self, id: SignalId) -> SignalValue {
-        self.signals.get(&id).copied().unwrap_or(SignalValue::Off)
-    }
-
-    /// Checks if a signal was changed since the last tick
-    #[must_use]
-    pub fn is_changed(&self, id: &SignalId) -> bool {
-        self.changed.contains(id)
-    }
-
-    /// Checks if a signal was `Off` the last tick and is now set
-    #[must_use]
-    pub fn is_rising_edge(&self, id: &SignalId) -> bool {
-        self.rising_edge.contains(id)
-    }
-
-    /// Checks if a signal was set the last tick and is now `Off`
-    #[must_use]
-    pub fn is_falling_edge(&self, id: &SignalId) -> bool {
-        self.falling_edge.contains(id)
     }
 
     /// Clears the edge and changed sets. Should be called at the end of each tick
@@ -97,6 +104,36 @@ impl UnitSignals {
         self.rising_edge.clear();
         self.falling_edge.clear();
         self.changed.clear();
+
+        debug_assert!(self.buf.is_empty());
+
+        for (id, value) in self.next.drain() {
+            if value.is_zero() {
+                continue;
+            }
+            let old_value = self.signals.remove(&id).unwrap_or(SignalValue::Off);
+
+            if old_value != value {
+                self.changed.insert(id);
+                if old_value.is_zero() {
+                    self.rising_edge.insert(id);
+                }
+            }
+
+            self.buf.insert(id, value);
+        }
+
+        for (id, value) in self.signals.drain() {
+            if value.is_zero() {
+                continue;
+            }
+            self.falling_edge.insert(id);
+        }
+
+        std::mem::swap(&mut self.signals, &mut self.buf);
+
+        debug_assert!(self.buf.is_empty());
+        debug_assert!(self.next.is_empty());
     }
 }
 
@@ -198,6 +235,24 @@ impl Hash for SignalValue {
                 FloatOrd(a.x).hash(state);
                 FloatOrd(a.y).hash(state);
             }
+        }
+    }
+}
+
+/// Defines addition for `SignalValue`. The rules are as follows:
+/// - `Off` + `X` = `X`
+/// - `Vector` + `X` = `Vector` + X.as_vector()
+/// - `Scalar` + `Scalar` = `Scalar` with the sum of the values
+impl Add<&SignalValue> for &SignalValue {
+    type Output = SignalValue;
+
+    fn add(self, rhs: &SignalValue) -> Self::Output {
+        match (self, rhs) {
+            (SignalValue::Off, rhs) => *rhs,
+            (lhs, SignalValue::Off) => *lhs,
+            (SignalValue::Vector(vec), rhs) => SignalValue::Vector(vec + rhs.as_vector()),
+            (lhs, SignalValue::Vector(vec)) => SignalValue::Vector(lhs.as_vector() + vec),
+            (SignalValue::Scalar(a), SignalValue::Scalar(b)) => SignalValue::Scalar(a + b),
         }
     }
 }

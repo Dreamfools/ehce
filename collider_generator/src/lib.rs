@@ -38,8 +38,8 @@ pub fn compute_collider(
     }
 
     let lines = ContourBuilder::new(width, height, true)
-        .x_origin(-0.5)
-        .y_origin(-0.5)
+        .x_origin(-0.5_f32)
+        .y_origin(-0.5_f32)
         .x_step(1.0 / width as f32)
         .y_step(1.0 / width as f32)
         .contours(dots.as_slice(), &[1.0])

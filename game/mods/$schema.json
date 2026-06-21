@@ -299,24 +299,19 @@
       "type": "object",
       "properties": {
         "acceleration_force": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Formula"
         },
         "braking_force": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Formula"
         },
         "max_angular_speed": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Formula"
         },
         "max_speed": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Formula"
         },
         "turn_torgue": {
-          "type": "number",
-          "format": "float"
+          "$ref": "#/$defs/Formula"
         }
       },
       "additionalProperties": false,

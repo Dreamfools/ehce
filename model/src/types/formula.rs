@@ -1,7 +1,9 @@
 use crate::registries::variable::UnitVariableModel;
+use crate::types::formula::formula_executor::FormulaExecutor;
 use bevy_reflect::erased_serde::__private::serde::de::Error;
 use bevy_reflect::{Reflect, TypePath};
 use exmex::Express as _;
+use itertools::Itertools as _;
 use registry::registry::id::{IdRef, RawId};
 use rootcause::{bail, report};
 use schemars::{JsonSchema, Schema, SchemaGenerator};
@@ -10,25 +12,47 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::borrow::Cow;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
-use std::sync::{Arc, LazyLock};
+use std::sync::{Arc, LazyLock, OnceLock};
+use utils::map::HashMap;
 use utils::rootcause_ext::AttachField;
 
 pub mod formula_context;
 
+pub mod formula_args;
+pub mod formula_executor;
+
 #[derive(Reflect)]
-pub enum FormulaModel<C: FormulaModelContext> {
-    Expr(ExprWithArgs<C>),
+pub enum FormulaModel<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> {
+    Expr(Arc<ExprWithArgs<ARGS, CTX>>),
     Const(f64),
+}
+
+impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> FormulaModel<ARGS, CTX> {
+    pub fn eval<EXEC: FormulaExecutor<ARGS, CTX>>(
+        &self,
+        executor: &EXEC,
+        args: ARGS::Input,
+    ) -> rootcause::Result<f64> {
+        executor.execute_formula(self, args)
+    }
+
+    pub fn eval_f32<EXEC: FormulaExecutor<ARGS, CTX>>(
+        &self,
+        executor: &EXEC,
+        args: ARGS::Input,
+    ) -> rootcause::Result<f32> {
+        executor.execute_formula(self, args).map(|x| x as f32)
+    }
 }
 
 #[derive(Reflect)]
 #[reflect(Clone)]
-pub struct ExprWithArgs<C: FormulaModelContext> {
+pub struct ExprWithArgs<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> {
     #[reflect(ignore, default = "default_expr")]
-    pub expr: Arc<exmex::FlatEx<f64>>,
+    pub expr: exmex::FlatEx<f64>,
     pub args: Vec<FormulaVariable>,
     #[reflect(ignore)]
-    _c: PhantomData<fn() -> C>,
+    _c: PhantomData<fn() -> (ARGS, CTX)>,
 }
 
 #[derive(Debug, Clone, Reflect)]
@@ -37,7 +61,7 @@ pub enum FormulaVariable {
     Local(String),
 }
 
-pub trait FormulaModelContext: TypePath {
+pub trait FormulaModelContext<Args: FormulaModelArgs>: TypePath {
     /// Validates the variable
     fn validate_variable(var: &FormulaVariable) -> rootcause::Result<()>;
 
@@ -59,8 +83,17 @@ pub trait FormulaModelContext: TypePath {
     }
 
     fn parse_variable(var: &str) -> rootcause::Result<FormulaVariable> {
+        let input_args = Args::argument_names();
         if !var.contains(':') {
-            return Ok(FormulaVariable::Local(var.to_string()));
+            if input_args.iter().any(|arg| arg == var) {
+                return Ok(FormulaVariable::Local(var.to_string()));
+            } else {
+                bail!(
+                    "Variable '{}' does not match any argument name. Allowed argument names are {}",
+                    var,
+                    input_args.iter().map(|s| format!("`{}`", s)).join(", ")
+                );
+            }
         }
         let (ns, var) = if let Some((namespace, var)) = var.split_once('@') {
             (namespace, var)
@@ -84,7 +117,32 @@ pub trait FormulaModelContext: TypePath {
     }
 }
 
-impl<C: FormulaModelContext> Debug for FormulaModel<C> {
+pub trait FormulaModelArgs: TypePath {
+    /// Input type for providing arguments to the formula
+    type Input;
+
+    /// Names of the arguments
+    fn argument_names() -> Cow<'static, [String]>;
+
+    /// Converts the input into an iterator of variable names and their values
+    ///
+    /// The order of the values must correspond to the order of the argument names
+    fn from_input(input: Self::Input) -> Vec<f64>;
+
+    /// A mapping from argument names to their indices in the input vector
+    fn arguments_indices() -> &'static HashMap<String, usize> {
+        static ARG_INDICES: OnceLock<HashMap<String, usize>> = OnceLock::new();
+        ARG_INDICES.get_or_init(|| {
+            Self::argument_names()
+                .iter()
+                .enumerate()
+                .map(|(idx, name)| (name.clone(), idx))
+                .collect()
+        })
+    }
+}
+
+impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Debug for FormulaModel<ARGS, CTX> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             FormulaModel::Expr(expr) => write!(f, "FormulaModel::Expr({})", expr.expr),
@@ -93,7 +151,7 @@ impl<C: FormulaModelContext> Debug for FormulaModel<C> {
     }
 }
 
-impl<C: FormulaModelContext> Clone for FormulaModel<C> {
+impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Clone for FormulaModel<ARGS, CTX> {
     fn clone(&self) -> Self {
         match self {
             FormulaModel::Expr(expr) => FormulaModel::Expr(expr.clone()),
@@ -102,7 +160,7 @@ impl<C: FormulaModelContext> Clone for FormulaModel<C> {
     }
 }
 
-impl<C: FormulaModelContext> Debug for ExprWithArgs<C> {
+impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Debug for ExprWithArgs<ARGS, CTX> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -112,7 +170,7 @@ impl<C: FormulaModelContext> Debug for ExprWithArgs<C> {
     }
 }
 
-impl<C: FormulaModelContext> Clone for ExprWithArgs<C> {
+impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Clone for ExprWithArgs<ARGS, CTX> {
     fn clone(&self) -> Self {
         Self {
             expr: self.expr.clone(),
@@ -122,9 +180,9 @@ impl<C: FormulaModelContext> Clone for ExprWithArgs<C> {
     }
 }
 
-fn default_expr() -> Arc<exmex::FlatEx<f64>> {
-    static DEFAULT_EXPR: LazyLock<Arc<exmex::FlatEx<f64>>> =
-        LazyLock::new(|| Arc::new(exmex::FlatEx::parse("0").unwrap()));
+fn default_expr() -> exmex::FlatEx<f64> {
+    static DEFAULT_EXPR: LazyLock<exmex::FlatEx<f64>> =
+        LazyLock::new(|| exmex::FlatEx::parse("0").unwrap());
     DEFAULT_EXPR.clone()
 }
 
@@ -139,7 +197,9 @@ const _: () = {
         Number(f64),
     }
 
-    impl<C: FormulaModelContext> JsonSchema for FormulaModel<C> {
+    impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> JsonSchema
+        for FormulaModel<ARGS, CTX>
+    {
         fn schema_name() -> Cow<'static, str> {
             "Formula".into()
         }
@@ -148,13 +208,13 @@ const _: () = {
             let mut schema = SerializedFormula::json_schema(generator);
             schema.insert(
                 "description".to_owned(),
-                serde_json::Value::String(C::description()),
+                serde_json::Value::String(CTX::description()),
             );
             schema
         }
     }
 
-    impl<C: FormulaModelContext> Serialize for FormulaModel<C> {
+    impl<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Serialize for FormulaModel<ARGS, CTX> {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
@@ -168,14 +228,18 @@ const _: () = {
         }
     }
 
-    impl<'de, C: FormulaModelContext> Deserialize<'de> for FormulaModel<C> {
+    impl<'de, ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Deserialize<'de>
+        for FormulaModel<ARGS, CTX>
+    {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: Deserializer<'de>,
         {
-            struct FormulaModelVisitor<C>(PhantomData<fn() -> C>);
-            impl<'de, C: FormulaModelContext> Visitor<'de> for FormulaModelVisitor<C> {
-                type Value = FormulaModel<C>;
+            struct FormulaModelVisitor<ARGS, C>(PhantomData<fn() -> (ARGS, C)>);
+            impl<'de, ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> Visitor<'de>
+                for FormulaModelVisitor<ARGS, CTX>
+            {
+                type Value = FormulaModel<ARGS, CTX>;
 
                 fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
                     write!(formatter, "formula string or a number")
@@ -212,7 +276,7 @@ const _: () = {
 
                     let mut args = Vec::new();
                     for var in formula.var_names() {
-                        args.push(C::parse_variable(var).map_err(|err| {
+                        args.push(CTX::parse_variable(var).map_err(|err| {
                             E::custom(
                                 err.context("Failed to parse variable in formula")
                                     .attach(AttachField("variable", var.to_string())),
@@ -220,11 +284,11 @@ const _: () = {
                         })?);
                     }
 
-                    Ok(FormulaModel::Expr(ExprWithArgs {
-                        expr: Arc::new(formula),
+                    Ok(FormulaModel::Expr(Arc::new(ExprWithArgs {
+                        expr: formula,
                         args,
                         _c: PhantomData,
-                    }))
+                    })))
                 }
             }
 

@@ -8,6 +8,7 @@ use bevy::prelude::{IntoScheduleConfigs as _, Plugin, World, in_state};
 pub mod device;
 pub mod signals;
 pub mod spawning;
+pub mod unit_variables;
 
 pub struct CombatPlugin;
 

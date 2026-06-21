@@ -45,6 +45,7 @@ weighted_rand = { git = "https://github.com/bionicles/weighted_rand.git", rev = 
 exmex = "0.20.5"
 variadics_please = "1.1.0"
 logos = "0.16.1"
+auto_ops = "0.3.0"
 
 # Workspace dependencies
 utils = { path = "utils" }
