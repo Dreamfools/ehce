@@ -146,6 +146,6 @@ fn reset_balls(mut commands: Commands, query: Query<Entity, With<PlayerBehavior>
 
 fn handle_mod_loaded_error_message(mut errs: MessageReader<ModLoadErrorMessage>) {
     for msg in errs.read() {
-        error!("Something gone wrong.\n{:?}", msg.0);
+        error!("Something gone wrong.\n{}", msg.0);
     }
 }
