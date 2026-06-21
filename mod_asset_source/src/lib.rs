@@ -80,13 +80,16 @@ impl ModsAssetReader {
                     name,
                 }));
             }
+            #[cfg(not(target_arch = "wasm32"))]
             EmbeddedOnRelease::FileSystem { root } => {
-                #[cfg(target_arch = "wasm32")]
+                self.add_filesystem(root);
+            }
+            #[cfg(target_arch = "wasm32")]
+            EmbeddedOnRelease::FileSystem { .. } => {
                 panic!(
                     "Embedded drivers must be in the embedded format on wasm, but {} is a filesystem driver",
                     name
                 );
-                self.add_filesystem(root);
             }
         }
 

@@ -24,7 +24,7 @@ use registry::registry::id::RawId;
 use registry::registry::reflect_registry::BuildReflectRegistry;
 use rootcause::prelude::ResultExt as _;
 use rootcause::report_collection::ReportCollection;
-use rootcause::{IntoReport as _, bail};
+use rootcause::{bail, report};
 use serde::{Deserialize, Serialize};
 use std::any::TypeId;
 use std::ops::{Deref as _, DerefMut as _};
@@ -39,7 +39,7 @@ pub static ASSET_READER: LazyLock<ModsAssetReader> = LazyLock::new(|| {
         "base".to_string(),
         embedded_assets!(
             "game/mods",
-            include_dir::include_dir!("$CARGO_MANIFEST_DIR/mods")
+            include_dir::include_dir!("$CARGO_MANIFEST_DIR/../game/mods")
         ),
     );
     ab.add_filesystem("mods".into());
@@ -135,7 +135,7 @@ fn loading_initializer(
     let mods = match result {
         Ok(mods) => mods,
         Err(err) => {
-            err_evt.write(ModLoadErrorMessage(err.into_report().into()));
+            err_evt.write(ModLoadErrorMessage(err.into()));
             return;
         }
     };
@@ -165,7 +165,7 @@ fn is_folder_loaded(
         }
         LoadState::Failed(err) => {
             error!("Failed to load mod files: {}", err);
-            return Err(err.into_report().into_dynamic());
+            return Err(err.into());
         }
         _ => {}
     }
@@ -189,7 +189,7 @@ fn is_folder_loaded(
                 .map_or_else(|| "<unknown>".to_string(), |p| p.to_string());
 
             rg.push(
-                err.into_report()
+                report!(err)
                     .context("Failed to load file")
                     .attach(AttachField("Path", path))
                     .into_cloneable(),

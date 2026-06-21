@@ -1,7 +1,8 @@
 use crate::path::{FieldPath, Segment};
 use crate::registry::TraverseRegistry;
 use crate::registry::id::RawId;
-use bevy_reflect::{PartialReflect, Reflect, ReflectKind, TypeInfo, VariantField, VariantType};
+use bevy_reflect::enums::{VariantField, VariantType};
+use bevy_reflect::{PartialReflect, Reflect, ReflectKind, TypeInfo};
 use rootcause::bail;
 
 pub fn traverse<T: Reflect>(
@@ -137,7 +138,7 @@ fn traverse_inner(
 
                 registry.id_ref_seen(path, generic_ty, *id)?;
             } else {
-                for (i, value) in item.iter_fields().enumerate() {
+                for (i, (_, value)) in item.iter_fields().enumerate() {
                     let name = item.name_at(i).expect("field has a name");
                     path.with_segment(Segment::Field(name.to_string()), |path| {
                         traverse_inner(value, path, registry)
