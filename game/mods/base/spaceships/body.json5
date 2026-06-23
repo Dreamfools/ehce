@@ -2,7 +2,10 @@
   "unit_definition": {
     "id": "base:scout",
     "weight": "5 * {core:cells_count}",
-    "preset_variables": {},
+    "preset_variables": {
+      "base:max_speed": 12,
+      "base:max_angular_speed": 6
+    },
     "builtin_devices": ["base:tank_controller"]
   }
 }

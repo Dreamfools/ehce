@@ -23,6 +23,7 @@ pub mod combat;
 pub mod ecs_tools;
 
 use crate::combat::CombatPlugin;
+use crate::combat::device::DeviceOf;
 use crate::combat::signals::inputs::PlayerBehavior;
 use crate::combat::spawning::SpawnSpaceshipMessage;
 use crate::state::GameState;
@@ -33,7 +34,7 @@ use mod_asset_source::MODS_FOLDER;
 use mod_loading::json5_asset_plugin::Json5AssetPlugin;
 use mod_loading::loading::{CustomAssetReaderPlugin, DatabaseAsset, load_last_mod};
 use mod_loading::mods::{ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
-use model::registries::spaceship::SpaceshipModel;
+use model::registries::ship_build::ShipBuildModel;
 use registry::registry::id::{IdRef, RawId};
 
 fn main() -> AppExit {
@@ -129,16 +130,16 @@ fn setup_scene(mut commands: Commands) {
 
 fn setup_ships(mut spawn_ships: MessageWriter<SpawnSpaceshipMessage>) {
     spawn_ships.write(SpawnSpaceshipMessage {
-        id: IdRef::<SpaceshipModel>::new(RawId::new("base:scout")),
+        id: IdRef::<ShipBuildModel>::new(RawId::new("base:scout")),
         position: Default::default(),
         extra_devices: vec![IdRef::new(RawId::new("core:player_inputs"))],
     });
 }
 
 /// Despawns all balls and respawns them.
-fn reset_balls(mut commands: Commands, query: Query<Entity, With<PlayerBehavior>>) {
-    for entity in &query {
-        commands.entity(entity).despawn();
+fn reset_balls(mut commands: Commands, query: Query<(Entity, &DeviceOf), With<PlayerBehavior>>) {
+    for (_, device) in &query {
+        commands.entity(device.parent()).despawn();
     }
 
     commands.run_system_cached(setup_ships);

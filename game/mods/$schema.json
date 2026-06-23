@@ -53,6 +53,42 @@
     {
       "type": "object",
       "properties": {
+        "ship_build": {
+          "$ref": "#/$defs/Entry%3CShipBuildModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "ship_build"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "component": {
+          "$ref": "#/$defs/Entry%3CComponentModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "component"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "component_stats": {
+          "$ref": "#/$defs/Entry%3CComponentStatsModel%3E"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "component_stats"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
         "game_setting": {
           "$ref": "#/$defs/GameSettings"
         }
@@ -117,9 +153,71 @@
     "ColorModel": {
       "$ref": "#/$defs/ColorDataSerialized"
     },
+    "ComponentModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+    },
+    "ComponentStatsModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+    },
     "DeviceModelId": {
       "type": "string",
       "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+    },
+    "Entry<ComponentModel>": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeviceModelId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "stats": {
+          "$ref": "#/$defs/ComponentStatsModelId"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "stats"
+      ]
+    },
+    "Entry<ComponentStatsModel>": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "variables": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[0-9a-z_]+:[0-9a-z_/]+$": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "variables"
+      ]
     },
     "Entry<DeviceModel>": {
       "type": "object",
@@ -163,6 +261,29 @@
         "id",
         "activation",
         "unique"
+      ]
+    },
+    "Entry<ShipBuildModel>": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InstalledComponentModel"
+          }
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+        },
+        "ship": {
+          "$ref": "#/$defs/SpaceshipModelId"
+        }
+      },
+      "required": [
+        "id",
+        "ship",
+        "components"
       ]
     },
     "Entry<SpaceshipModel>": {
@@ -302,9 +423,25 @@
       "type": "string",
       "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     },
+    "InstalledComponentModel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ComponentModelId"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ]
+    },
     "PlayerInputsDeviceModel": {
       "type": "object",
       "additionalProperties": false
+    },
+    "SpaceshipModelId": {
+      "type": "string",
+      "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
     },
     "TankControllerDeviceModel": {
       "type": "object",

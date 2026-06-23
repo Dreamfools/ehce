@@ -4,12 +4,5 @@
     "sprite": "base:scout",
     "model_size": 1,
     "unit": "base:scout",
-    "preset_variables": {
-      "base:acceleration_force": 12,
-      "base:braking_force": 1,
-      "base:turn_torque": 3,
-      "base:max_speed": 12,
-      "base:max_angular_speed": 6,
-    }
   },
 }

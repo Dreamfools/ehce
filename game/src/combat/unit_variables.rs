@@ -1,4 +1,4 @@
-use crate::combat::{CombatInputs, CombatVariablesUpdate};
+use crate::combat::CombatVariablesUpdate;
 use bevy::app::{App, Plugin};
 use bevy::ecs::system::SystemParam;
 use bevy::log::error;
@@ -43,6 +43,7 @@ struct VarData {
 }
 
 impl UnitVariables {
+    #[must_use]
     /// Creates a new [UnitVariables] with the given preset values
     pub fn new(reg: &ReflectRegistry, preset: &HashMap<IdRef<UnitVariableModel>, f64>) -> Self {
         let mut vars = HashMap::default();

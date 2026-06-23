@@ -1,0 +1,7 @@
+{
+  component: {
+    id: "base:thruster",
+    name: "Thruster",
+    stats: "base:thruster",
+  }
+}

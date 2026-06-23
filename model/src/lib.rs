@@ -1,3 +1,6 @@
+use crate::registries::component::ComponentModel;
+use crate::registries::component_stats::ComponentStatsModel;
+use crate::registries::ship_build::ShipBuildModel;
 use crate::settings::game_settings::GameSettings;
 use bevy_reflect::{Reflect, Type, Typed as _};
 pub use common_model as common;
@@ -23,6 +26,9 @@ pub enum ModModel {
     Device(Entry<DeviceModel>),
     UnitDefinition(Entry<UnitDefinitionModel>),
     UnitVariable(Entry<UnitVariableModel>),
+    ShipBuild(Entry<ShipBuildModel>),
+    Component(Entry<ComponentModel>),
+    ComponentStats(Entry<ComponentStatsModel>),
     // settings
     GameSetting(Singleton<GameSettings>),
 }

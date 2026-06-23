@@ -1,0 +1,10 @@
+{
+  component_stats: {
+    id: "base:thruster",
+    variables: {
+      "base:acceleration_force": 4,
+      "base:braking_force": 1,
+      "base:turn_torque": 1,
+    }
+  }
+}

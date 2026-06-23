@@ -14,7 +14,7 @@ use bevy::prelude::{
 use bevy::reflect::Reflect;
 use mod_loading::mods::ModData;
 use model::registries::device::{DeviceKindModel, DeviceModel};
-use model::registries::spaceship::SpaceshipModel;
+use model::registries::ship_build::ShipBuildModel;
 use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
 use utils::map::{HashMap, HashSet};
@@ -30,7 +30,7 @@ impl Plugin for SpawningPlugin {
 
 #[derive(Debug, Message, Reflect)]
 pub struct SpawnSpaceshipMessage {
-    pub id: IdRef<SpaceshipModel>,
+    pub id: IdRef<ShipBuildModel>,
     pub position: Vec2,
     pub extra_devices: Vec<IdRef<DeviceModel>>,
 }
@@ -51,7 +51,8 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         msg.id, msg.position
     );
 
-    let ship = &reg[msg.id];
+    let ship_build = &reg[msg.id];
+    let ship = &reg[ship_build.ship];
 
     let circle = Circle::new(30.0);
 
@@ -69,6 +70,21 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         vars.insert(*id, *value);
     }
 
+    let mut comp_devices = Vec::new();
+
+    for comp in &ship_build.components {
+        let comp_data = &reg[comp.id];
+        let comp_stats = &reg[comp_data.stats];
+
+        if let Some(device) = comp_data.device {
+            comp_devices.push(device);
+        }
+
+        for (id, value) in &comp_stats.variables {
+            *vars.entry(*id).or_insert_with(|| reg[id].default_value) += *value;
+        }
+    }
+
     let mut entity = commands.spawn((
         Name::new(msg.id.to_string()),
         RigidBody::Dynamic,
@@ -81,11 +97,12 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         Mass(1.0),
     ));
 
-    // TODO: store these active devices in a component?
+    // TODO: store these active devices list in a component?
     let mut active_devices = Default::default();
     for device in unit_def
         .builtin_devices
         .iter()
+        .chain(comp_devices.iter())
         .chain(msg.extra_devices.iter())
     {
         spawn_device(reg, entity.reborrow(), &mut active_devices, device);

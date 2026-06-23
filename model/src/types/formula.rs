@@ -23,6 +23,7 @@ pub mod formula_executor;
 
 #[derive(Reflect)]
 pub enum FormulaModel<ARGS: FormulaModelArgs, CTX: FormulaModelContext<ARGS>> {
+    // TODO: move whole Expr into Arc once reflect supports Arc
     Expr(ExprWithArgs<ARGS, CTX>),
     Const(f64),
 }
@@ -284,13 +285,11 @@ const _: () = {
                         })?);
                     }
 
-                    Ok(FormulaModel::Expr(
-                        (ExprWithArgs {
-                            expr: Arc::new(formula),
-                            args,
-                            _c: PhantomData,
-                        }),
-                    ))
+                    Ok(FormulaModel::Expr(ExprWithArgs {
+                        expr: Arc::new(formula),
+                        args,
+                        _c: PhantomData,
+                    }))
                 }
             }
 
