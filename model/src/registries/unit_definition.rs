@@ -1,5 +1,5 @@
 use crate::registries::device::DeviceModel;
-use crate::registries::variable::UnitVariableModel;
+use crate::registries::variable::{UnitVariableMap, UnitVariableModel};
 use crate::types::formula::formula_context::UnitFormulaModel;
 use bevy_reflect::Reflect;
 use registry::registry::id::IdRef;
@@ -11,6 +11,6 @@ use std::collections::BTreeMap;
 #[serde(deny_unknown_fields)]
 pub struct UnitDefinitionModel {
     pub weight: UnitFormulaModel,
-    pub preset_variables: BTreeMap<IdRef<UnitVariableModel>, f64>,
+    pub preset_variables: UnitVariableMap,
     pub builtin_devices: Vec<IdRef<DeviceModel>>,
 }

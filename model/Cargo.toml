@@ -16,6 +16,7 @@ exmex = { workspace = true }
 rootcause = { workspace = true }
 utils = { workspace = true }
 itertools = { workspace = true }
+auto_ops = { workspace = true }
 
 [lints]
 workspace = true

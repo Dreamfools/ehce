@@ -208,8 +208,7 @@
           "additionalProperties": false,
           "patternProperties": {
             "^[0-9a-z_]+:[0-9a-z_/]+$": {
-              "type": "number",
-              "format": "double"
+              "$ref": "#/$defs/VariableValue"
             }
           }
         }
@@ -303,8 +302,7 @@
           "default": {},
           "patternProperties": {
             "^[0-9a-z_]+:[0-9a-z_/]+$": {
-              "type": "number",
-              "format": "double"
+              "$ref": "#/$defs/VariableValue"
             }
           }
         },
@@ -340,8 +338,7 @@
           "additionalProperties": false,
           "patternProperties": {
             "^[0-9a-z_]+:[0-9a-z_/]+$": {
-              "type": "number",
-              "format": "double"
+              "$ref": "#/$defs/VariableValue"
             }
           }
         },
@@ -361,8 +358,7 @@
       "properties": {
         "default_value": {
           "description": "The default value of the variable",
-          "type": "number",
-          "format": "double"
+          "$ref": "#/$defs/VariableValue"
         },
         "id": {
           "type": "string",
@@ -474,6 +470,40 @@
     "UnitDefinitionModelId": {
       "type": "string",
       "pattern": "^[0-9a-z_]+:[0-9a-z_/]+$"
+    },
+    "VariableValue": {
+      "anyOf": [
+        {
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "number",
+              "format": "double",
+              "default": 0.0
+            },
+            "bonus": {
+              "type": "number",
+              "format": "double",
+              "default": 0.0
+            },
+            "flat": {
+              "type": "number",
+              "format": "double",
+              "default": 0.0
+            },
+            "multiplier": {
+              "type": "number",
+              "format": "double",
+              "default": 1.0
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   }
 }

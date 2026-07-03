@@ -4,7 +4,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::log::error;
 use bevy::prelude::{Component, Query, Reflect, Res};
 use mod_loading::mods::ModData;
-use model::registries::variable::UnitVariableModel;
+use model::registries::variable::{UnitVariableMap, UnitVariableModel, VariableValue};
 use model::types::formula::formula_context::UnitFormulaContext;
 use model::types::formula::formula_executor::FormulaExecutor;
 use model::types::formula::{FormulaModelArgs, FormulaVariable};
@@ -26,7 +26,7 @@ fn sys_progress_variables(
 ) {
     for (mut vars, mut write) in query {
         for (id, add) in write.unit.drain() {
-            vars.add(&mod_data.registry, id, add);
+            vars.add(&mod_data.registry, id, &add);
         }
     }
 }
@@ -38,14 +38,15 @@ pub struct UnitVariables {
 
 #[derive(Debug, Clone, Default, Reflect, Component)]
 struct VarData {
-    value: f64,
+    value: VariableValue,
+    computed: f64,
     readonly: bool,
 }
 
 impl UnitVariables {
     #[must_use]
     /// Creates a new [UnitVariables] with the given preset values
-    pub fn new(reg: &ReflectRegistry, preset: &HashMap<IdRef<UnitVariableModel>, f64>) -> Self {
+    pub fn new(reg: &ReflectRegistry, preset: &UnitVariableMap) -> Self {
         let mut vars = HashMap::default();
         for (id, value) in preset {
             let var = &reg[*id];
@@ -53,6 +54,7 @@ impl UnitVariables {
                 *id,
                 VarData {
                     value: *value,
+                    computed: value.compute(),
                     readonly: var.readonly,
                 },
             );
@@ -63,9 +65,9 @@ impl UnitVariables {
     #[must_use]
     pub fn get(&self, reg: &ReflectRegistry, id: IdRef<UnitVariableModel>) -> f64 {
         if let Some(var) = self.vars.get(&id) {
-            var.value
+            var.computed
         } else {
-            reg[id].default_value
+            reg[id].default_value.compute()
         }
     }
 
@@ -78,11 +80,12 @@ impl UnitVariables {
         UnitFormulaExecutor { vars: self, ctx }
     }
 
-    fn add(&mut self, reg: &ReflectRegistry, id: IdRef<UnitVariableModel>, value: f64) {
+    fn add(&mut self, reg: &ReflectRegistry, id: IdRef<UnitVariableModel>, value: &VariableValue) {
         let entry = self.vars.entry(id).or_insert_with(|| {
             let var = &reg[id];
             VarData {
                 value: var.default_value,
+                computed: var.default_value.compute(),
                 readonly: var.readonly,
             }
         });
@@ -97,7 +100,7 @@ impl UnitVariables {
 
 #[derive(Debug, Clone, Default, Reflect, Component)]
 struct UnitVariablesChanges {
-    unit: HashMap<IdRef<UnitVariableModel>, f64>,
+    unit: HashMap<IdRef<UnitVariableModel>, VariableValue>,
 }
 
 #[derive(SystemParam)]

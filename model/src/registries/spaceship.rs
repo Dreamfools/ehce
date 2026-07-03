@@ -1,5 +1,5 @@
 use crate::registries::unit_definition::UnitDefinitionModel;
-use crate::registries::variable::UnitVariableModel;
+use crate::registries::variable::{UnitVariableMap, UnitVariableModel};
 use crate::types::sprite::SpriteId;
 use bevy_reflect::Reflect;
 use registry::registry::id::IdRef;
@@ -14,5 +14,5 @@ pub struct SpaceshipModel {
     pub model_size: f32,
     pub unit: IdRef<UnitDefinitionModel>,
     #[serde(default)]
-    pub preset_variables: BTreeMap<IdRef<UnitVariableModel>, f64>,
+    pub preset_variables: UnitVariableMap,
 }

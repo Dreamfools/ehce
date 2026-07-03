@@ -15,8 +15,10 @@ use bevy::reflect::Reflect;
 use mod_loading::mods::ModData;
 use model::registries::device::{DeviceKindModel, DeviceModel};
 use model::registries::ship_build::ShipBuildModel;
+use model::registries::variable::UnitVariableMap;
 use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
+use std::ops::AddAssign;
 use utils::map::{HashMap, HashSet};
 
 pub struct SpawningPlugin;
@@ -61,7 +63,7 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
 
     let unit_def = &reg[ship.unit];
 
-    let mut vars = HashMap::default();
+    let mut vars = UnitVariableMap::default();
     for (id, value) in unit_def
         .preset_variables
         .iter()
@@ -81,7 +83,7 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         }
 
         for (id, value) in &comp_stats.variables {
-            *vars.entry(*id).or_insert_with(|| reg[id].default_value) += *value;
+            *vars.entry(*id).or_insert_with(|| reg[id].default_value) += value;
         }
     }
 
