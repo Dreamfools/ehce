@@ -9,6 +9,7 @@ pub mod device;
 pub mod signals;
 pub mod spawning;
 pub mod unit_variables;
+pub mod visuals;
 
 pub struct CombatPlugin;
 

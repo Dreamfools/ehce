@@ -4,11 +4,7 @@
     variables: {
       "base:acceleration_force": 4,
       "base:braking_force": 1,
-      "base:turn_torque": 1,
-      "base:armor": {
-        base: 1000,
-        bonus: -0.25
-      }
+      "base:turn_torque": 1
     }
   }
 }

@@ -22,6 +22,8 @@ pub mod state;
 pub mod combat;
 pub mod ecs_tools;
 
+pub mod hardcoded_constants;
+
 use crate::combat::CombatPlugin;
 use crate::combat::device::DeviceOf;
 use crate::combat::signals::inputs::PlayerBehavior;
@@ -69,17 +71,7 @@ fn main() -> AppExit {
 
     app.add_systems(OnEnter(GameState::Init), load_last_mod)
         .add_systems(PostUpdate, (init_tick).run_if(in_state(GameState::Init)))
-        .add_systems(OnEnter(GameState::Gameplay), (setup_scene, setup_ships))
         .add_systems(PostUpdate, handle_mod_loaded_error_message);
-
-    // Setup the scene and UI, and update text in `Update`.
-    app.add_systems(
-        Update,
-        (
-            // Reset the scene when the 'R' key is pressed.
-            reset_balls.run_if(input_pressed(KeyCode::KeyR)),
-        ),
-    );
 
     // Run the app.
     app.run()
@@ -107,42 +99,6 @@ fn init_tick(
         mod_state.set(ModState::Ready);
         state.set(GameState::Gameplay);
     }
-}
-
-#[derive(Reflect, Component)]
-struct Ball;
-
-fn setup_scene(mut commands: Commands) {
-    // Spawn a camera.
-    commands.spawn((
-        Camera2d,
-        Projection::Orthographic(OrthographicProjection {
-            near: -1e9,
-            far: 1e9,
-            scaling_mode: ScalingMode::AutoMax {
-                max_width: 64.0,
-                max_height: 64.0,
-            },
-            ..OrthographicProjection::default_2d()
-        }),
-    ));
-}
-
-fn setup_ships(mut spawn_ships: MessageWriter<SpawnSpaceshipMessage>) {
-    spawn_ships.write(SpawnSpaceshipMessage {
-        id: IdRef::<ShipBuildModel>::new(RawId::new("base:scout")),
-        position: Default::default(),
-        extra_devices: vec![IdRef::new(RawId::new("core:player_inputs"))],
-    });
-}
-
-/// Despawns all balls and respawns them.
-fn reset_balls(mut commands: Commands, query: Query<(Entity, &DeviceOf), With<PlayerBehavior>>) {
-    for (_, device) in &query {
-        commands.entity(device.parent()).despawn();
-    }
-
-    commands.run_system_cached(setup_ships);
 }
 
 fn handle_mod_loaded_error_message(mut errs: MessageReader<ModLoadErrorMessage>) {
