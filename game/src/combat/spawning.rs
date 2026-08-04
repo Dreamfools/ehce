@@ -5,26 +5,22 @@ use crate::combat::init::CombatMarker;
 use crate::combat::signals::UnitSignals;
 use crate::combat::signals::inputs::PlayerBehavior;
 use crate::combat::unit_variables::UnitVariables;
-use crate::combat::visuals::space_background::BackgroundMaterial;
-use crate::state::GameState;
+use crate::combat::visuals::camera::{
+    CameraFollowSecondaryTarget, CameraFollowTarget, WorldWrapping, WorldWrappingCenter,
+};
 use avian2d::interpolation::TransformInterpolation;
 use avian2d::prelude::{Collider, Mass, RigidBody};
-use bevy::app::{App, Plugin, Update};
-use bevy::camera::{Camera2d, OrthographicProjection, Projection, ScalingMode};
+use bevy::app::{App, Plugin};
 use bevy::log::{info, warn};
-use bevy::mesh::{Mesh, Mesh2d};
 use bevy::prelude::{
-    Circle, Commands, EntityCommands, MeshMaterial2d, Message, MessageWriter, Messages, Name,
-    OnEnter, Rectangle, Res, ResMut, Sprite, Transform, Vec2, Vec3,
+    Circle, Commands, EntityCommands, Message, Messages, Name, Res, ResMut, Sprite, Transform, Vec2,
 };
 use bevy::reflect::Reflect;
-use bevy::sprite_render::Material2dPlugin;
-use bevy_asset::Assets;
 use mod_loading::mods::ModData;
 use model::registries::device::{DeviceKindModel, DeviceModel};
 use model::registries::ship_build::ShipBuildModel;
 use model::registries::variable::UnitVariableMap;
-use registry::registry::id::{IdRef, RawId};
+use registry::registry::id::IdRef;
 use registry::registry::reflect_registry::ReflectRegistry;
 use utils::map::HashSet;
 
@@ -63,7 +59,7 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
     let ship_build = &reg[msg.id];
     let ship = &reg[ship_build.ship];
 
-    let circle = Circle::new(30.0);
+    let circle = Circle::new(ship.model_size / 2.0);
 
     let mut sprite = Sprite::from_image(reg[ship.sprite].clone());
     sprite.custom_size = Some(Vec2::splat(1.0));
@@ -105,6 +101,8 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
         UnitSignals::bundle(),
         UnitVariables::new(reg, &vars),
         Mass(1.0),
+        CameraFollowSecondaryTarget,
+        WorldWrapping,
     ));
 
     // TODO: store these active devices list in a component?
@@ -139,6 +137,7 @@ fn spawn_device(
             entity.with_related::<DeviceOf>(PhysicsTankController::from_device(tank));
         }
         DeviceKindModel::PlayerInputs(_) => {
+            entity.insert((CameraFollowTarget, WorldWrappingCenter));
             entity.with_related::<DeviceOf>(PlayerBehavior::Directional);
         }
     }

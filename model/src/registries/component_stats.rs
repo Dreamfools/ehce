@@ -1,4 +1,4 @@
-use crate::registries::variable::{UnitVariableMap, UnitVariableModel};
+use crate::registries::variable::UnitVariableMap;
 use bevy_reflect::Reflect;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

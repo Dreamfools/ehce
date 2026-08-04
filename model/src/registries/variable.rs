@@ -52,6 +52,7 @@ impl Default for VariableValue {
 
 impl VariableValue {
     /// Combines two [VariableValue]s into one, stacking their values
+    #[must_use]
     pub fn combine(&self, other: &Self) -> Self {
         Self {
             base: self.base + other.base,
@@ -72,6 +73,7 @@ impl VariableValue {
     ///
     /// [multiplier] is raised to the power of the factor, while [base], [bonus],
     /// and [flat] are scaled linearly
+    #[must_use]
     pub fn multiply(&self, factor: f64) -> Self {
         Self {
             base: self.base * factor,
@@ -82,6 +84,7 @@ impl VariableValue {
     }
 
     /// Computes the final value of the variable based on its components
+    #[must_use]
     pub fn compute(&self) -> f64 {
         self.base * (1.0 + self.bonus) * self.multiplier + self.flat
     }

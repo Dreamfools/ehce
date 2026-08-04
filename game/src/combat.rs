@@ -7,6 +7,7 @@ use bevy::prelude::{IntoScheduleConfigs as _, Plugin, World, in_state};
 
 pub mod device;
 pub mod init;
+pub mod settings;
 pub mod signals;
 pub mod spawning;
 pub mod unit_variables;
@@ -50,6 +51,7 @@ impl Plugin for CombatPlugin {
             device::DevicePlugin,
             spawning::SpawningPlugin,
             signals::SignalsPlugin,
+            visuals::camera::CameraPlugin,
         ));
     }
 }

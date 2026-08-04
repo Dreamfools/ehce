@@ -1,15 +1,17 @@
-use crate::combat::CombatPostUpdate;
+use crate::combat::settings::CombatSettings;
 use crate::combat::spawning::SpawnSpaceshipMessage;
+use crate::combat::visuals::camera::{CombatBackground, CombatCamera};
 use crate::combat::visuals::space_background::BackgroundMaterial;
 use crate::state::GameState;
 use avian2d::parry::glamx::Vec3;
 use bevy::app::{App, FixedUpdate, Plugin};
 use bevy::camera::{Camera2d, OrthographicProjection, Projection, ScalingMode};
 use bevy::input::common_conditions::input_pressed;
+use bevy::math::{Vec2, Vec4};
 use bevy::mesh::{Mesh, Mesh2d};
 use bevy::prelude::{
-    Commands, Component, Entity, IntoScheduleConfigs, KeyCode, MeshMaterial2d, Message,
-    MessageWriter, Messages, OnEnter, Query, Rectangle, Reflect, ResMut, Transform, With, World,
+    Commands, Component, Entity, IntoScheduleConfigs as _, KeyCode, MeshMaterial2d, Message,
+    MessageWriter, Messages, OnEnter, Rectangle, Reflect, ResMut, Transform, With, World,
 };
 use bevy::sprite_render::Material2dPlugin;
 use bevy_asset::Assets;
@@ -53,38 +55,48 @@ fn sys_handle_combat_init(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<BackgroundMaterial>>,
 ) {
-    let Some(msg) = messages.drain().last() else {
+    let Some(_msg) = messages.drain().last() else {
         return;
     };
 
-    // Spawn a camera.
-    commands.spawn((
-        CombatMarker,
-        Camera2d,
-        Projection::Orthographic(OrthographicProjection {
-            near: -1e9,
-            far: 1e9,
-            scaling_mode: ScalingMode::AutoMax {
-                max_width: 64.0,
-                max_height: 64.0,
-            },
-            ..OrthographicProjection::default_2d()
-        }),
-    ));
+    commands.insert_resource(CombatSettings::default());
 
-    commands.spawn((
-        CombatMarker,
-        Mesh2d(meshes.add(Rectangle::default())),
-        MeshMaterial2d(materials.add(BackgroundMaterial {
-            transform: Vec3::new(0.0, 0.0, 128.0),
-        })),
-        Transform::default().with_scale(Vec3::splat(128.)),
-    ));
+    // Spawn a camera.
+    commands
+        .spawn((
+            CombatMarker,
+            CombatCamera::default(),
+            Camera2d,
+            Projection::Orthographic(OrthographicProjection {
+                near: -1e9,
+                far: 1e9,
+                scaling_mode: ScalingMode::AutoMax {
+                    max_height: 64.0,
+                    max_width: 64.0,
+                },
+                ..OrthographicProjection::default_2d()
+            }),
+        ))
+        .with_child((
+            CombatMarker,
+            CombatBackground,
+            Mesh2d(meshes.add(Rectangle::default())),
+            MeshMaterial2d(materials.add(BackgroundMaterial {
+                transform: Vec4::ZERO,
+            })),
+            Transform::default().with_scale(Vec3::splat(64.)),
+        ));
 
     spawn_ships.write(SpawnSpaceshipMessage {
         id: IdRef::<ShipBuildModel>::new(RawId::new("base:scout")),
-        position: Default::default(),
+        position: Vec2::new(10.0, 0.0),
         extra_devices: vec![IdRef::new(RawId::new("core:player_inputs"))],
+    });
+
+    spawn_ships.write(SpawnSpaceshipMessage {
+        id: IdRef::<ShipBuildModel>::new(RawId::new("base:scout")),
+        position: Vec2::new(0.0, 0.0),
+        extra_devices: vec![],
     });
 }
 
@@ -94,13 +106,15 @@ fn sys_handle_combat_init(
 /// Also consumes all [CombatClearMessage]s but leaves [CombatInitMessage]s in
 /// the queue so that they can be handled by [sys_handle_combat_init]
 fn sys_handle_combat_clear(w: &mut World) {
-    let mut want_clear = false;
+    let mut want_clear;
 
+    // resources are inserted by plugin
+    #[cfg_attr(bevy_lint, allow(bevy::panicking_methods))]
     let mut clear_messages = w.resource_mut::<Messages<CombatClearMessage>>();
     want_clear = !clear_messages.is_empty();
     clear_messages.clear();
-    drop(clear_messages);
 
+    #[cfg_attr(bevy_lint, allow(bevy::panicking_methods))]
     let init_messages = w.resource::<Messages<CombatInitMessage>>();
     if !init_messages.is_empty() {
         want_clear = true;

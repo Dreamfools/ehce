@@ -25,19 +25,13 @@ pub mod ecs_tools;
 pub mod hardcoded_constants;
 
 use crate::combat::CombatPlugin;
-use crate::combat::device::DeviceOf;
-use crate::combat::signals::inputs::PlayerBehavior;
-use crate::combat::spawning::SpawnSpaceshipMessage;
 use crate::state::GameState;
-use bevy::camera::ScalingMode;
 use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
-use bevy::{input::common_conditions::input_pressed, prelude::*};
+use bevy::prelude::*;
 use mod_asset_source::MODS_FOLDER;
 use mod_loading::json5_asset_plugin::Json5AssetPlugin;
 use mod_loading::loading::{CustomAssetReaderPlugin, DatabaseAsset, load_last_mod};
 use mod_loading::mods::{ModLoadErrorMessage, ModLoadedMessage, ModPlugin, ModState};
-use model::registries::ship_build::ShipBuildModel;
-use registry::registry::id::{IdRef, RawId};
 
 fn main() -> AppExit {
     let mut app = App::new();

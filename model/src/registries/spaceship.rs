@@ -1,11 +1,10 @@
 use crate::registries::unit_definition::UnitDefinitionModel;
-use crate::registries::variable::{UnitVariableMap, UnitVariableModel};
+use crate::registries::variable::UnitVariableMap;
 use crate::types::sprite::SpriteId;
 use bevy_reflect::Reflect;
 use registry::registry::id::IdRef;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Reflect)]
 #[serde(deny_unknown_fields)]
