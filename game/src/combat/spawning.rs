@@ -1,6 +1,7 @@
 use crate::combat::CombatPostUpdate;
 use crate::combat::device::DeviceOf;
 use crate::combat::device::tank_controller::PhysicsTankController;
+use crate::combat::init::CombatMarker;
 use crate::combat::signals::UnitSignals;
 use crate::combat::signals::inputs::PlayerBehavior;
 use crate::combat::unit_variables::UnitVariables;
@@ -31,9 +32,7 @@ pub struct SpawningPlugin;
 
 impl Plugin for SpawningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(Material2dPlugin::<BackgroundMaterial>::default());
         app.add_systems(CombatPostUpdate, sys_spawn_spaceships)
-            .add_systems(OnEnter(GameState::Gameplay), sys_init_battlefield)
             .add_message::<SpawnSpaceshipMessage>();
     }
 }
@@ -43,41 +42,6 @@ pub struct SpawnSpaceshipMessage {
     pub id: IdRef<ShipBuildModel>,
     pub position: Vec2,
     pub extra_devices: Vec<IdRef<DeviceModel>>,
-}
-
-fn sys_init_battlefield(
-    mut commands: Commands,
-    mut spawn_ships: MessageWriter<SpawnSpaceshipMessage>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<BackgroundMaterial>>,
-) {
-    // Spawn a camera.
-    commands.spawn((
-        Camera2d,
-        Projection::Orthographic(OrthographicProjection {
-            near: -1e9,
-            far: 1e9,
-            scaling_mode: ScalingMode::AutoMax {
-                max_width: 64.0,
-                max_height: 64.0,
-            },
-            ..OrthographicProjection::default_2d()
-        }),
-    ));
-
-    commands.spawn((
-        Mesh2d(meshes.add(Rectangle::default())),
-        MeshMaterial2d(materials.add(BackgroundMaterial {
-            transform: Vec3::new(0.0, 0.0, 128.0),
-        })),
-        Transform::default().with_scale(Vec3::splat(128.)),
-    ));
-
-    spawn_ships.write(SpawnSpaceshipMessage {
-        id: IdRef::<ShipBuildModel>::new(RawId::new("base:scout")),
-        position: Default::default(),
-        extra_devices: vec![IdRef::new(RawId::new("core:player_inputs"))],
-    });
 }
 
 fn sys_spawn_spaceships(
@@ -132,6 +96,7 @@ fn spawn_spaceship(reg: &ReflectRegistry, mut commands: Commands, msg: SpawnSpac
 
     let mut entity = commands.spawn((
         Name::new(msg.id.to_string()),
+        CombatMarker,
         RigidBody::Dynamic,
         Collider::from(circle),
         TransformInterpolation,

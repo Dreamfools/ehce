@@ -6,6 +6,7 @@ use bevy::math::Vec2;
 use bevy::prelude::{IntoScheduleConfigs as _, Plugin, World, in_state};
 
 pub mod device;
+pub mod init;
 pub mod signals;
 pub mod spawning;
 pub mod unit_variables;
@@ -45,6 +46,7 @@ impl Plugin for CombatPlugin {
                 .with_length_unit(1.0)
                 .set(avian2d::interpolation::PhysicsInterpolationPlugin::interpolate_all()),
             // Plugins
+            init::InitPlugin,
             device::DevicePlugin,
             spawning::SpawningPlugin,
             signals::SignalsPlugin,
