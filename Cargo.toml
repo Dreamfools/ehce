@@ -46,6 +46,7 @@ exmex = "0.21.0"
 variadics_please = "2.0.0"
 logos = "0.16.1"
 auto_ops = "0.3.0"
+rstest = "0.26.1"
 
 # Workspace dependencies
 utils = { path = "utils" }

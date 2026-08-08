@@ -34,7 +34,7 @@ pub struct VariableValue {
     /// bonus
     pub multiplier: f64,
     /// Flat bonus to the variable (e.g., +5). Stacks additively with other
-    /// flat bonuses and applies after all other calculations (e.g.,
+    /// flat bonuses and applies after all other non-damage calculations (e.g.,
     /// `10{base} * 1.5{bonus} * 2{multiplier} + 5{flat} = 35`)
     pub flat: f64,
 }
@@ -51,17 +51,17 @@ impl Default for VariableValue {
 }
 
 impl VariableValue {
-    /// Combines two [VariableValue]s into one, stacking their values
+    /// Combines two [VariableValue]s into one, stacking their values and
+    /// weighted-averaging their damage
+    #[inline]
     #[must_use]
     pub fn combine(&self, other: &Self) -> Self {
-        Self {
-            base: self.base + other.base,
-            bonus: self.bonus + other.bonus,
-            multiplier: self.multiplier * other.multiplier,
-            flat: self.flat + other.flat,
-        }
+        let mut dmg = *self;
+        dmg.combine_in_place(other);
+        dmg
     }
 
+    #[inline]
     pub fn combine_in_place(&mut self, other: &Self) {
         self.base += other.base;
         self.bonus += other.bonus;
@@ -75,6 +75,7 @@ impl VariableValue {
     /// power of the factor, while [base](VariableValue#structfield.base),
     /// [bonus](VariableValue#structfield.bonus), and
     /// [flat](VariableValue#structfield.flat) are scaled linearly
+    #[inline]
     #[must_use]
     pub fn multiply(&self, factor: f64) -> Self {
         Self {
@@ -85,15 +86,63 @@ impl VariableValue {
         }
     }
 
-    /// Computes the final value of the variable based on its components
+    /// Computes the final value of the variable based on its components and damage
+    #[inline]
     #[must_use]
     pub fn compute(&self) -> f64 {
-        self.base * (1.0 + self.bonus) * self.multiplier + self.flat
+        self.base
+            .mul_add((1.0 + self.bonus) * self.multiplier, self.flat)
     }
 }
 
 impl_op_ex!(+ |a: &VariableValue, b: &VariableValue| -> VariableValue { a.combine(b) });
 impl_op_ex!(+= |a: &mut VariableValue, b: &VariableValue| { a.combine_in_place(b) });
+
+/// Variable damage. Always clamped to \[0,1\]
+///
+/// Stored as 1.0 - damage to simplify multiplying
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Reflect, PartialEq)]
+#[serde(transparent)]
+pub struct VariableValueDamage(f64);
+
+impl VariableValueDamage {
+    pub const ZERO: Self = Self::new(0.0);
+
+    /// Constructs new damage value
+    #[inline]
+    #[must_use]
+    pub const fn new(damage: f64) -> Self {
+        debug_assert!(!damage.is_nan(), "Damage value cannot be NaN");
+        Self(1.0 - damage.clamp(0.0, 1.0))
+    }
+
+    /// Multiplier for the final value
+    #[inline]
+    #[must_use]
+    pub const fn multiplier(&self) -> f64 {
+        self.0
+    }
+
+    /// Raw damage value (0.0 = no damage, 1.0 = full damage)
+    #[inline]
+    #[must_use]
+    pub const fn damage(&self) -> f64 {
+        1.0 - self.0
+    }
+
+    /// Applies incoming damage to the variable value
+    #[inline]
+    pub const fn incoming_damage(&mut self, damage: f64) {
+        debug_assert!(!damage.is_nan(), "Incoming damage cannot be NaN");
+        self.0 = (self.0 - damage).clamp(0.0, 1.0);
+    }
+}
+
+impl Default for VariableValueDamage {
+    fn default() -> Self {
+        Self::ZERO
+    }
+}
 
 fn one() -> f64 {
     1.0
