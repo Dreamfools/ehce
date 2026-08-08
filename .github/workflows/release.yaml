@@ -50,6 +50,8 @@ concurrency:
 
 # Configure the release workflow by editing the following values.
 env:
+  # Use the same Rust toolchain across jobs so they can share a cache.
+  toolchain: 1.97.1
   # The base filename of the binary produced by `cargo build`.
   cargo_build_binary_name: game
 
@@ -181,10 +183,10 @@ jobs:
           echo "package=${app_package_name}-"'${{ matrix.platform }}${{ matrix.package_ext }}' >> "${GITHUB_ENV}"
 
           # Rustflags:
-          RUSTFLAGS='-Zthreads=0'
-          if [ '${{ matrix.platform }}' != 'windows' ]; then
-            RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }"'-Zshare-generics=y'
-          fi
+          # RUSTFLAGS='-Zthreads=0'
+          # if [ '${{ matrix.platform }}' != 'windows' ]; then
+          #   RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }"'-Zshare-generics=y'
+          # fi
           if [ '${{ inputs.deny_warnings }}' = 'true' ]; then
             RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }"'-Dwarnings'
           fi
@@ -212,8 +214,9 @@ jobs:
 
       - name: Install Rust toolchain
         if: ${{ env.is_platform_enabled == 'true' }}
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: ${{ env.toolchain }}
           targets: ${{ matrix.targets }}
 
       - name: Restore Rust cache
