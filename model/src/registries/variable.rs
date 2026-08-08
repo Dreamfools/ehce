@@ -34,8 +34,8 @@ pub struct VariableValue {
     /// bonus
     pub multiplier: f64,
     /// Flat bonus to the variable (e.g., +5). Stacks additively with other
-    /// flat bonuses and applies after all other calculations (e.g., `10<base>
-    /// * 1.5<bonus> * 2<multiplier> + 5<flat> = 35`)
+    /// flat bonuses and applies after all other calculations (e.g.,
+    /// `10{base} * 1.5{bonus} * 2{multiplier} + 5{flat} = 35`)
     pub flat: f64,
 }
 
@@ -71,8 +71,10 @@ impl VariableValue {
 
     /// Multiplies the [VariableValue] by a scalar factor, scaling its components
     ///
-    /// [multiplier] is raised to the power of the factor, while [base], [bonus],
-    /// and [flat] are scaled linearly
+    /// [multiplier](VariableValue#structfield.multiplier) is raised to the
+    /// power of the factor, while [base](VariableValue#structfield.base),
+    /// [bonus](VariableValue#structfield.bonus), and
+    /// [flat](VariableValue#structfield.flat) are scaled linearly
     #[must_use]
     pub fn multiply(&self, factor: f64) -> Self {
         Self {
